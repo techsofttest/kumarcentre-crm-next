@@ -178,10 +178,6 @@ export default function Sidebar({ userRole }: SidebarProps) {
                         </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                        <Link href="/dashboard/notifications" className="relative text-slate-600 dark:text-white p-1 rounded-md bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 transition-colors">
-                            <Bell className="h-4 w-4" />
-                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-zinc-900" />
-                        </Link>
                         <button className="text-slate-600 dark:text-white p-1 rounded-md bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 transition-colors">
                             <MoreVertical className="h-4 w-4" />
                         </button>
