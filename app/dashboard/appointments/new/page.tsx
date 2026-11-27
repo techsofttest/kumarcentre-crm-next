@@ -105,7 +105,7 @@ export default function NewAppointmentPage() {
     const router = useRouter();
 
     // Step 1: Appointment Type
-    const [appointmentType, setAppointmentType] = useState<"new_registration" | "review_consultation" | "procedure">("new_registration");
+    const [appointmentType, setAppointmentType] = useState<"new_registration" | "review_consultation" | "procedure">("review_consultation");
 
     // Step 2: Patient Search & Selection
     const [searchType, setSearchType] = useState<"mobile" | "file_number">("mobile");
@@ -204,11 +204,18 @@ export default function NewAppointmentPage() {
             setIsSearchingPatient(true);
             try {
                 const res = await api.searchPatients(trimmed, searchType);
-                setPatientResults(res.data || []);
+                const results = res.data || [];
+                setPatientResults(results);
                 setHasSearched(true);
+                if (searchType === "mobile" && results.length === 0) {
+                    setNewMobile(trimmed);
+                }
             } catch {
                 setPatientResults([]);
                 setHasSearched(true);
+                if (searchType === "mobile") {
+                    setNewMobile(trimmed);
+                }
             } finally {
                 setIsSearchingPatient(false);
             }
@@ -286,13 +293,8 @@ export default function NewAppointmentPage() {
         e.preventDefault();
         setSubmissionError(null);
 
-        if (!selectedPatient) {
-            setSubmissionError("Please select or register a patient.");
-            return;
-        }
-
-        if (appointmentType !== "new_registration" && !selectedPatient.file_number) {
-            setSubmissionError(`An existing patient file number is strictly required for ${appointmentType === "procedure" ? "Procedures" : "Review Consultations"}.`);
+        if (!selectedPatient && (!newName.trim() || !newMobile.trim())) {
+            setSubmissionError("Please select an existing patient or enter Full Name and Mobile Number to register a new patient.");
             return;
         }
 
@@ -313,9 +315,24 @@ export default function NewAppointmentPage() {
 
         setIsSubmitting(true);
         try {
+            let patientToBook = selectedPatient;
+
+            if (!patientToBook) {
+                const regRes = await api.registerPatientInline({
+                    name: newName.trim(),
+                    mobile_number: newMobile.trim(),
+                    alternate_contact_number: newAltMobile.trim() || undefined,
+                    date_of_birth: newDob || undefined,
+                    gender: newGender || undefined,
+                });
+                patientToBook = regRes.patient;
+                setSelectedPatient(patientToBook);
+                setShowInlineRegister(false);
+            }
+
             const bookedSlot = selectedSlot;
             const res = await api.createReceptionistAppointment({
-                patient_id: selectedPatient.id,
+                patient_id: patientToBook.id,
                 doctor_id: Number(selectedDoctorId),
                 appointment_type: appointmentType,
                 appointment_date: appointmentDate,
@@ -468,51 +485,12 @@ export default function NewAppointmentPage() {
                 </div>
             ) : (
                 <form onSubmit={handleSaveAppointment} className="space-y-6">
-                    {/* CARD 1: APPOINTMENT TYPE */}
-                    <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-4">
-                        <div>
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                                <Calendar className="h-4 w-4" /> 1. Select Appointment Type
-                            </h2>
-                            <p className="text-xs text-foreground/60 mt-1">
-                                Determines file number requirements and available service workflows
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {[
-                                { id: "new_registration", label: "New Registration", desc: "First visit, can register inline" },
-                                { id: "review_consultation", label: "Review Consultation", desc: "Existing patient file required" },
-                                { id: "procedure", label: "Procedure", desc: "Existing patient & optional physio assignment" },
-                            ].map((type) => (
-                                <button
-                                    key={type.id}
-                                    type="button"
-                                    onClick={() => {
-                                        setAppointmentType(type.id as any);
-                                        if (type.id !== "new_registration" && selectedPatient && !selectedPatient.file_number) {
-                                            setSelectedPatient(null);
-                                        }
-                                        setShowInlineRegister(false);
-                                    }}
-                                    className={`flex flex-col text-left p-4 rounded-xl border transition-all ${appointmentType === type.id
-                                        ? "border-purple-600 bg-purple-50/60 dark:bg-purple-950/30 text-purple-950 dark:text-purple-100 ring-1 ring-purple-600"
-                                        : "border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 bg-white dark:bg-zinc-800/40"
-                                        }`}
-                                >
-                                    <span className="text-sm font-bold">{type.label}</span>
-                                    <span className="text-xs text-foreground/60 mt-0.5">{type.desc}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     {/* CARD 2: PATIENT AUTO-LOOKUP & SELECTION */}
                     <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
                                 <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                                    <User className="h-4 w-4" /> 2. Patient Lookup
+                                    <User className="h-4 w-4" /> Patient Lookup
                                 </h2>
                                 <p className="text-xs text-foreground/60 mt-0.5">
                                     Search registered patients by mobile number or file number
@@ -521,22 +499,6 @@ export default function NewAppointmentPage() {
 
                             {!selectedPatient && (
                                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                                    {appointmentType === "new_registration" && !showInlineRegister && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            icon={UserPlus}
-                                            onClick={() => {
-                                                setShowInlineRegister(true);
-                                                if (searchType === "mobile" && searchQuery.trim()) {
-                                                    setNewMobile(searchQuery.trim());
-                                                }
-                                            }}
-                                        >
-                                            New Patient
-                                        </Button>
-                                    )}
                                     <div className="flex items-center rounded-lg border border-black/10 dark:border-white/10 p-0.5 bg-zinc-100 dark:bg-zinc-800 text-xs">
                                     <button
                                         type="button"
@@ -655,22 +617,6 @@ export default function NewAppointmentPage() {
                                             <span className="text-xs font-semibold text-foreground/70">
                                                 {patientResults.length} matching {patientResults.length === 1 ? "patient" : "patients"} found
                                             </span>
-                                            {appointmentType === "new_registration" && !showInlineRegister && (
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    icon={UserPlus}
-                                                    onClick={() => {
-                                                        setShowInlineRegister(true);
-                                                        if (searchType === "mobile") {
-                                                            setNewMobile(searchQuery.trim());
-                                                        }
-                                                    }}
-                                                >
-                                                    New Patient
-                                                </Button>
-                                            )}
                                         </div>
 
                                         <div className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 divide-y divide-black/5 dark:divide-white/5 overflow-hidden max-h-60 overflow-y-auto">
@@ -705,34 +651,6 @@ export default function NewAppointmentPage() {
                                                 </div>
                                             ))}
                                         </div>
-
-                                        {appointmentType === "new_registration" && !showInlineRegister && (
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 rounded-xl border border-dashed border-purple-200 dark:border-purple-800/60 bg-purple-50/40 dark:bg-purple-950/20">
-                                                <div className="text-xs">
-                                                    <span className="font-semibold text-foreground">
-                                                        Booking for a different person?
-                                                    </span>
-                                                    <p className="text-foreground/60 mt-0.5">
-                                                        Register a new patient under this {searchType === "mobile" ? "mobile" : "file"} number
-                                                    </p>
-                                                </div>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    icon={UserPlus}
-                                                    className="shrink-0 border-purple-300 text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900/40"
-                                                    onClick={() => {
-                                                        setShowInlineRegister(true);
-                                                        if (searchType === "mobile") {
-                                                            setNewMobile(searchQuery.trim());
-                                                        }
-                                                    }}
-                                                >
-                                                    New Patient
-                                                </Button>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
@@ -743,48 +661,24 @@ export default function NewAppointmentPage() {
                                             <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
                                             No patient record found matching "{searchQuery}"
                                         </p>
-                                        {appointmentType === "new_registration" ? (
-                                            <div className="mt-3">
-                                                <p className="text-xs text-foreground/50 mb-2">
-                                                    You can register this new patient:
-                                                </p>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    icon={UserPlus}
-                                                    onClick={() => {
-                                                        setShowInlineRegister(true);
-                                                        if (searchType === "mobile") {
-                                                            setNewMobile(searchQuery);
-                                                        }
-                                                    }}
-                                                >
-                                                    New Patient
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
-                                                ⚠️ An existing patient file number is required for {appointmentType === "procedure" ? "Procedure" : "Review Consultation"}.
-                                            </p>
-                                        )}
                                     </div>
                                 )}
 
                                 {/* Inline Registration Form */}
-                                {showInlineRegister && appointmentType === "new_registration" && (
+                                {((hasSearched && !patientResults.some((p) => {
+                                    if (searchType === "mobile") {
+                                        const qDigits = searchQuery.trim().replace(/\D/g, "");
+                                        const pDigits = (p.mobile_number || "").replace(/\D/g, "");
+                                        return qDigits !== "" && pDigits === qDigits;
+                                    }
+                                    return searchQuery.trim() !== "" && (p.file_number || "").toLowerCase() === searchQuery.trim().toLowerCase();
+                                })) || showInlineRegister) && (
                                     <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 p-5 space-y-3.5">
                                         <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/50 pb-2">
                                             <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
                                                 <UserPlus className="h-3.5 w-3.5" /> Quick Patient Registration
                                             </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowInlineRegister(false)}
-                                                className="text-foreground/50 hover:text-foreground text-xs"
-                                            >
-                                                Cancel
-                                            </button>
+                                           
                                         </div>
 
                                         {registerError && (
@@ -877,26 +771,6 @@ export default function NewAppointmentPage() {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="flex justify-end pt-1">
-                                            <Button
-                                                type="button"
-                                                variant="filled"
-                                                size="sm"
-                                                disabled={isRegisteringPatient}
-                                                onClick={handleRegisterPatientInline}
-                                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                            >
-                                                {isRegisteringPatient ? (
-                                                    <>
-                                                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                                        Registering...
-                                                    </>
-                                                ) : (
-                                                    "Save & Select Patient"
-                                                )}
-                                            </Button>
-                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -907,7 +781,7 @@ export default function NewAppointmentPage() {
                     <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-4">
                         <div>
                             <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                                <Stethoscope className="h-4 w-4" /> 3. Doctor & Schedule Date
+                                <Stethoscope className="h-4 w-4" /> Doctor & Schedule Date
                             </h2>
                             <p className="text-xs text-foreground/60 mt-0.5">
                                 Select active consultant and desired booking date
@@ -953,7 +827,7 @@ export default function NewAppointmentPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                                    <Clock className="h-4 w-4" /> 4. Available Time Slots
+                                    <Clock className="h-4 w-4" /> Available Time Slots
                                 </h2>
                                 
                             </div>
@@ -1003,7 +877,7 @@ export default function NewAppointmentPage() {
                     {appointmentType === "procedure" && (
                         <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-3">
                             <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
-                                <Activity className="h-4 w-4" /> 5. Physiotherapist Assignment (Optional)
+                                <Activity className="h-4 w-4" /> Physiotherapist Assignment (Optional)
                             </h2>
                             <p className="text-xs text-foreground/60">
                                 Assign this therapy procedure directly to an active physiotherapist queue:
@@ -1067,7 +941,7 @@ export default function NewAppointmentPage() {
                             <Button
                                 type="submit"
                                 variant="filled"
-                                disabled={isSubmitting || !selectedPatient || !selectedSlot}
+                                disabled={isSubmitting || (!selectedPatient && (!newName.trim() || !newMobile.trim())) || !selectedSlot}
                                 className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
                             >
                                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

@@ -171,18 +171,16 @@ export default function PhysioReportsPage() {
                                 <thead className="border-b border-black/10 bg-zinc-50 text-[11px] uppercase tracking-wider text-foreground/60 dark:border-white/10 dark:bg-zinc-800/50">
                                     <tr>
                                         <th className="px-5 py-3.5 font-bold">Date & Time</th>
-                                        <th className="px-5 py-3.5 font-bold">Session #</th>
                                         <th className="px-5 py-3.5 font-bold">Patient Name</th>
                                         <th className="px-5 py-3.5 font-bold">File #</th>
-                                        <th className="px-5 py-3.5 font-bold">Therapist</th>
-                                        <th className="px-5 py-3.5 font-bold">Status</th>
-                                        <th className="px-5 py-3.5 text-right font-bold">Charge (₹)</th>
+                                        <th className="px-5 py-3.5 font-bold">Session Remark</th>
+                                        <th className="px-5 py-3.5 font-bold">Patient Response</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-black/5 dark:divide-white/5">
                                     {reportData.sessions.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="py-12 text-center text-foreground/50">
+                                            <td colSpan={5} className="py-12 text-center text-foreground/50">
                                                 No sessions found in the selected date range.
                                             </td>
                                         </tr>
@@ -192,9 +190,6 @@ export default function PhysioReportsPage() {
                                                 <td className="px-5 py-4 font-medium">
                                                     {formatDateDisplay(s.date)} • {s.time}
                                                 </td>
-                                                <td className="px-5 py-4 font-mono font-bold text-purple-600">
-                                                    #{s.session_number}
-                                                </td>
                                                 <td className="px-5 py-4 font-bold text-foreground">
                                                     {s.patient_name}
                                                 </td>
@@ -202,19 +197,10 @@ export default function PhysioReportsPage() {
                                                     {s.patient_file_number || "—"}
                                                 </td>
                                                 <td className="px-5 py-4 text-foreground/80">
-                                                    {s.physiotherapist_name}
+                                                    {s.session_remark?.trim() ? s.session_remark : "-"}
                                                 </td>
-                                                <td className="px-5 py-4">
-                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                                                        s.status === "completed"
-                                                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                                            : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                                    }`}>
-                                                        {s.status === "completed" ? "Completed" : "In Progress"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-5 py-4 text-right font-mono font-bold">
-                                                    {s.charge_amount > 0 ? `₹${s.charge_amount.toLocaleString()}` : "Package Covered"}
+                                                <td className="px-5 py-4 text-foreground/80">
+                                                    {s.patient_response?.trim() ? s.patient_response : "-"}
                                                 </td>
                                             </tr>
                                         ))

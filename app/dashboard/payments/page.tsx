@@ -423,10 +423,14 @@ export default function FinancialLedger() {
 
                                             <td
                                                 className={`px-5 py-4 text-right font-mono font-bold whitespace-nowrap ${
-                                                    isCharge ? "text-red-600" : "text-emerald-600"
+                                                    e.transaction_type === "payment_received" || e.transaction_type === "advance_credit"
+                                                        ? "text-emerald-600"
+                                                        : "text-red-600"
                                                 }`}
                                             >
-                                                {isCharge ? `+₹${e.amount?.toLocaleString()}` : `-₹${e.amount?.toLocaleString()}`}
+                                                {e.transaction_type === "payment_received" || e.transaction_type === "advance_credit"
+                                                    ? `+₹${e.amount?.toLocaleString()}`
+                                                    : `-₹${e.amount?.toLocaleString()}`}
                                             </td>
 
                                             <td className="px-5 py-4 text-right font-mono text-foreground/60 whitespace-nowrap">
@@ -519,10 +523,6 @@ export default function FinancialLedger() {
                                 <span>{selectedEntryForReversal.transaction_type_label}</span>
                             </div>
                         </div>
-
-                        <p className="text-xs text-foreground/70">
-                            Reversals are immutable audit events. The original transaction is preserved, and an offsetting reversal is posted.
-                        </p>
 
                         <form onSubmit={handleReverseTransaction} className="space-y-4">
                             <div>

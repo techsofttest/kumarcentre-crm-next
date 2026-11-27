@@ -147,10 +147,8 @@ export default function OverviewDashboard() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     // Modal action state
-    const [actionType, setActionType] = useState<"reject" | "cancel" | "reschedule" | "assign_physio" | null>(null);
+    const [actionType, setActionType] = useState<"reject" | "cancel" | "assign_physio" | null>(null);
     const [reasonText, setReasonText] = useState("");
-    const [rescheduleDate, setRescheduleDate] = useState("");
-    const [rescheduleTime, setRescheduleTime] = useState("");
     const [selectedPhysioId, setSelectedPhysioId] = useState<number | "">("");
     const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
@@ -250,13 +248,6 @@ export default function OverviewDashboard() {
                 if (!reasonText.trim()) throw new Error("A cancellation reason is mandatory.");
                 await api.cancelAppointment(selectedApt.id, reasonText.trim());
                 setAlertMessage("Appointment cancelled.");
-            } else if (actionType === "reschedule") {
-                if (!rescheduleDate || !rescheduleTime) throw new Error("Both new date and time are required.");
-                await api.rescheduleAppointment(selectedApt.id, {
-                    appointment_date: rescheduleDate,
-                    start_time: rescheduleTime,
-                });
-                setAlertMessage("Appointment rescheduled successfully.");
             } else if (actionType === "assign_physio") {
                 if (!selectedPhysioId) throw new Error("Please select a physiotherapist.");
                 await api.assignPhysiotherapist(selectedApt.id, Number(selectedPhysioId));
@@ -767,27 +758,14 @@ export default function OverviewDashboard() {
                                             <UserCheck className="h-4 w-4" />
                                             Check In Patient (Send to Doctor Queue)
                                         </Button>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setRescheduleDate(selectedApt.appointment_date?.slice(0, 10));
-                                                    setRescheduleTime(selectedApt.start_time?.slice(0, 5));
-                                                    setActionType("reschedule");
-                                                }}
-                                            >
-                                                Reschedule
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setActionType("cancel")}
-                                                className="text-red-600 border-red-200 hover:bg-red-50"
-                                            >
-                                                Cancel Booking
-                                            </Button>
-                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setActionType("cancel")}
+                                            className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                                        >
+                                            Cancel Booking
+                                        </Button>
                                     </div>
                                 )}
 
@@ -849,7 +827,6 @@ export default function OverviewDashboard() {
                             <h3 className="text-base font-bold text-foreground">
                                 {actionType === "reject" && "Reject Appointment Request"}
                                 {actionType === "cancel" && "Cancel Confirmed Appointment"}
-                                {actionType === "reschedule" && "Reschedule Appointment"}
                                 {actionType === "assign_physio" && "Assign Procedure to Physiotherapist"}
                             </h3>
                             <button onClick={() => setActionType(null)} className="text-foreground/50 hover:text-foreground">
@@ -872,37 +849,6 @@ export default function OverviewDashboard() {
                                         className="w-full rounded-md border border-foreground/20 bg-white dark:bg-zinc-800 p-2.5 text-xs text-foreground focus:border-purple-600 focus:outline-none"
                                     />
                                 </div>
-                            )}
-
-                            {actionType === "reschedule" && (
-                                <>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-foreground mb-1">
-                                            New Appointment Date <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="date"
-                                            required
-                                            min={new Date().toISOString().split("T")[0]}
-                                            value={rescheduleDate}
-                                            onChange={(e) => setRescheduleDate(e.target.value)}
-                                            className="w-full rounded-md border border-foreground/20 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-foreground focus:border-purple-600 focus:outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-foreground mb-1">
-                                            New Start Time <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="time"
-                                            required
-                                            value={rescheduleTime}
-                                            onChange={(e) => setRescheduleTime(e.target.value)}
-                                            className="w-full rounded-md border border-foreground/20 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-foreground focus:border-purple-600 focus:outline-none"
-                                        />
-                                    </div>
-                                </>
                             )}
 
                             {actionType === "assign_physio" && (

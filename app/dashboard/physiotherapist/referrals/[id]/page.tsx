@@ -748,9 +748,13 @@ export default function PhysioReferralDetailPage() {
                                                         {entry.payment_method || "—"}
                                                     </td>
                                                     <td className={`px-4 py-3 text-right font-mono font-bold ${
-                                                        entry.is_charge ? "text-red-600" : "text-emerald-600"
+                                                        entry.transaction_type === "payment_received" || entry.transaction_type === "advance_credit"
+                                                            ? "text-emerald-600"
+                                                            : "text-red-600"
                                                     }`}>
-                                                        {entry.is_charge ? `+₹${entry.amount?.toLocaleString()}` : `-₹${entry.amount?.toLocaleString()}`}
+                                                        {entry.transaction_type === "payment_received" || entry.transaction_type === "advance_credit"
+                                                            ? `+₹${entry.amount?.toLocaleString()}`
+                                                            : `-₹${entry.amount?.toLocaleString()}`}
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-mono text-foreground/60">
                                                         ₹{entry.allocated_amount?.toLocaleString()}
