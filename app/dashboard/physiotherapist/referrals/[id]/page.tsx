@@ -337,20 +337,18 @@ export default function PhysioReferralDetailPage() {
                             </Button>
                         )}
 
-                        {(typeof window !== "undefined" && localStorage.getItem("userRole")?.toLowerCase() !== "physiotherapist") && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    setPayAmount(financial_summary.outstanding_balance > 0 ? String(Math.round(Number(financial_summary.outstanding_balance))) : "");
-                                    setPaymentModalOpen(true);
-                                }}
-                                className="gap-2"
-                            >
-                                <IndianRupee className="h-4 w-4 text-purple-600" />
-                                Record Payment
-                            </Button>
-                        )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setPayAmount(financial_summary.outstanding_balance > 0 ? String(Math.round(Number(financial_summary.outstanding_balance))) : "");
+                                setPaymentModalOpen(true);
+                            }}
+                            className="gap-2"
+                        >
+                            <IndianRupee className="h-4 w-4 text-purple-600" />
+                            Record Payment
+                        </Button>
 
                         {!isCompleted && !isClosed && (
                             <Button
