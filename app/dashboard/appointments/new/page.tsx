@@ -105,7 +105,7 @@ export default function NewAppointmentPage() {
     const router = useRouter();
 
     // Step 1: Appointment Type
-    const [appointmentType, setAppointmentType] = useState<"new_registration" | "review_consultation" | "procedure">("review_consultation");
+    const [appointmentType, setAppointmentType] = useState<"new_registration" | "review_consultation" | "procedure">("new_registration");
 
     // Step 2: Patient Search & Selection
     const [searchType, setSearchType] = useState<"mobile" | "file_number">("mobile");
@@ -485,6 +485,44 @@ export default function NewAppointmentPage() {
                 </div>
             ) : (
                 <form onSubmit={handleSaveAppointment} className="space-y-6">
+                    {/* CARD 1: APPOINTMENT TYPE */}
+                    <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-4">
+                        <div>
+                            <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                                <Calendar className="h-4 w-4" /> Select Appointment Type
+                            </h2>
+                            <p className="text-xs text-foreground/60 mt-1">
+                                Choose between a new patient registration or review consultation
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {[
+                                { id: "new_registration", label: "New Registration", desc: "First visit" },
+                                { id: "review_consultation", label: "Review Consultation", desc: "Existing patient consultation" },
+                            ].map((type) => (
+                                <button
+                                    key={type.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setAppointmentType(type.id as any);
+                                        if (type.id !== "new_registration" && selectedPatient && !selectedPatient.file_number) {
+                                            setSelectedPatient(null);
+                                        }
+                                        setShowInlineRegister(false);
+                                    }}
+                                    className={`flex flex-col text-left p-4 rounded-xl border transition-all ${appointmentType === type.id
+                                        ? "border-purple-600 bg-purple-50/60 dark:bg-purple-950/30 text-purple-950 dark:text-purple-100 ring-1 ring-purple-600"
+                                        : "border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 bg-white dark:bg-zinc-800/40"
+                                        }`}
+                                >
+                                    <span className="text-sm font-bold">{type.label}</span>
+                                    <span className="text-xs text-foreground/60 mt-0.5">{type.desc}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* CARD 2: PATIENT AUTO-LOOKUP & SELECTION */}
                     <div className="rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -500,37 +538,37 @@ export default function NewAppointmentPage() {
                             {!selectedPatient && (
                                 <div className="flex items-center gap-2 self-start sm:self-auto">
                                     <div className="flex items-center rounded-lg border border-black/10 dark:border-white/10 p-0.5 bg-zinc-100 dark:bg-zinc-800 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSearchType("mobile");
-                                            setPatientResults([]);
-                                            setHasSearched(false);
-                                        }}
-                                        className={`px-3 py-1.5 rounded-md font-medium transition-all ${searchType === "mobile"
-                                            ? "bg-white dark:bg-zinc-900 text-foreground"
-                                            : "text-foreground/60 hover:text-foreground"
-                                            }`}
-                                    >
-                                        Mobile Number
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSearchType("file_number");
-                                            setPatientResults([]);
-                                            setHasSearched(false);
-                                        }}
-                                        className={`px-3 py-1.5 rounded-md font-medium transition-all ${searchType === "file_number"
-                                            ? "bg-white dark:bg-zinc-900 text-foreground"
-                                            : "text-foreground/60 hover:text-foreground"
-                                            }`}
-                                    >
-                                        File Number
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchType("mobile");
+                                                setPatientResults([]);
+                                                setHasSearched(false);
+                                            }}
+                                            className={`px-3 py-1.5 rounded-md font-medium transition-all ${searchType === "mobile"
+                                                ? "bg-white dark:bg-zinc-900 text-foreground"
+                                                : "text-foreground/60 hover:text-foreground"
+                                                }`}
+                                        >
+                                            Mobile Number
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchType("file_number");
+                                                setPatientResults([]);
+                                                setHasSearched(false);
+                                            }}
+                                            className={`px-3 py-1.5 rounded-md font-medium transition-all ${searchType === "file_number"
+                                                ? "bg-white dark:bg-zinc-900 text-foreground"
+                                                : "text-foreground/60 hover:text-foreground"
+                                                }`}
+                                        >
+                                            File Number
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
                         </div>
 
                         {/* SELECTED PATIENT SUMMARY */}
@@ -673,106 +711,106 @@ export default function NewAppointmentPage() {
                                     }
                                     return searchQuery.trim() !== "" && (p.file_number || "").toLowerCase() === searchQuery.trim().toLowerCase();
                                 })) || showInlineRegister) && (
-                                    <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 p-5 space-y-3.5">
-                                        <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/50 pb-2">
-                                            <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                                                <UserPlus className="h-3.5 w-3.5" /> Quick Patient Registration
-                                            </span>
-                                           
-                                        </div>
+                                        <div className="rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 p-5 space-y-3.5">
+                                            <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/50 pb-2">
+                                                <span className="text-xs font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                                                    <UserPlus className="h-3.5 w-3.5" /> Quick Patient Registration
+                                                </span>
 
-                                        {registerError && (
-                                            <div className="rounded-lg bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
-                                                {registerError}
-                                            </div>
-                                        )}
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                    Patient Full Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={newName}
-                                                    onChange={(e) => setNewName(e.target.value)}
-                                                    placeholder=""
-                                                    className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                    Mobile Number *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={newMobile}
-                                                    onChange={(e) => setNewMobile(e.target.value)}
-                                                    placeholder=""
-                                                    className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                    Alternate Contact / WhatsApp (Optional)
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={newAltMobile}
-                                                    onChange={(e) => setNewAltMobile(e.target.value)}
-                                                    placeholder=""
-                                                    className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
-                                                />
                                             </div>
 
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                    Gender (M, F, O)
-                                                </label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {(["M", "F", "O"] as const).map((g) => (
-                                                        <button
-                                                            key={g}
-                                                            type="button"
-                                                            onClick={() => setNewGender(g)}
-                                                            className={`py-2 text-xs font-bold rounded-lg border transition-all ${newGender === g
-                                                                ? "border-purple-600 bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200"
-                                                                : "border-black/15 dark:border-white/15 bg-white dark:bg-zinc-800 text-foreground/70 hover:text-foreground"
-                                                                }`}
-                                                        >
-                                                            {g === "M" ? "Male (M)" : g === "F" ? "Female (F)" : "Other (O)"}
-                                                        </button>
-                                                    ))}
+                                            {registerError && (
+                                                <div className="rounded-lg bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                                                    {registerError}
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Patient Full Name *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newName}
+                                                        onChange={(e) => setNewName(e.target.value)}
+                                                        placeholder=""
+                                                        className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Mobile Number *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newMobile}
+                                                        onChange={(e) => setNewMobile(e.target.value)}
+                                                        placeholder=""
+                                                        className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Alternate Contact / WhatsApp (Optional)
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newAltMobile}
+                                                        onChange={(e) => setNewAltMobile(e.target.value)}
+                                                        placeholder=""
+                                                        className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2.5 text-xs focus:border-purple-600 focus:outline-none"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Gender (M, F, O)
+                                                    </label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {(["M", "F", "O"] as const).map((g) => (
+                                                            <button
+                                                                key={g}
+                                                                type="button"
+                                                                onClick={() => setNewGender(g)}
+                                                                className={`py-2 text-xs font-bold rounded-lg border transition-all ${newGender === g
+                                                                    ? "border-purple-600 bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200"
+                                                                    : "border-black/15 dark:border-white/15 bg-white dark:bg-zinc-800 text-foreground/70 hover:text-foreground"
+                                                                    }`}
+                                                            >
+                                                                {g === "M" ? "Male (M)" : g === "F" ? "Female (F)" : "Other (O)"}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Date of Birth (DD-MM-YYYY)
+                                                    </label>
+                                                    <FlatpickrDob
+                                                        value={newDob}
+                                                        onChange={setNewDob}
+                                                        placeholder="DD-MM-YYYY"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-foreground/70 mb-1">
+                                                        Age
+                                                    </label>
+                                                    <div className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/60 p-2.5 text-xs font-medium text-foreground/80 flex items-center h-[38px] mt-0.5">
+                                                        {calculatedAge !== null ? `${calculatedAge} years old` : "Select DOB"}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                    Date of Birth (DD-MM-YYYY)
-                                                </label>
-                                                <FlatpickrDob
-                                                    value={newDob}
-                                                    onChange={setNewDob}
-                                                    placeholder="DD-MM-YYYY"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-semibold text-foreground/70 mb-1">
-                                                Age
-                                                </label>
-                                                <div className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/60 p-2.5 text-xs font-medium text-foreground/80 flex items-center h-[38px] mt-0.5">
-                                                    {calculatedAge !== null ? `${calculatedAge} years old` : "Select DOB"}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
                             </div>
                         )}
                     </div>
@@ -811,12 +849,13 @@ export default function NewAppointmentPage() {
                                 <label className="block text-xs font-semibold text-foreground/70 mb-1.5">
                                     Appointment Date *
                                 </label>
-                                <input
-                                    type="date"
-                                    min={new Date().toISOString().slice(0, 10)}
+                                <FlatpickrDob
                                     value={appointmentDate}
-                                    onChange={(e) => setAppointmentDate(e.target.value)}
-                                    className="w-full rounded-xl border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 py-2 px-3 text-sm focus:border-purple-600 focus:outline-none"
+                                    onChange={setAppointmentDate}
+                                    placeholder="DD-MM-YYYY"
+                                    minDate="today"
+                                    maxDate=""
+                                    defaultYear={new Date().getFullYear()}
                                 />
                             </div>
                         </div>
@@ -829,7 +868,7 @@ export default function NewAppointmentPage() {
                                 <h2 className="text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-2">
                                     <Clock className="h-4 w-4" /> Available Time Slots
                                 </h2>
-                                
+
                             </div>
                             {isLoadingSlots && (
                                 <span className="flex items-center gap-1.5 text-xs text-purple-600">
@@ -917,7 +956,7 @@ export default function NewAppointmentPage() {
                         </div>
 
 
-                        
+
                         {/*<div className="flex items-center gap-2.5 pt-1">
                             <input
                                 type="checkbox"

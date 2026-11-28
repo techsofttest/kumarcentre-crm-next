@@ -40,16 +40,16 @@ const sidebarConfig = [
     { label: "My Profile", route: "/dashboard/doctor/profile", roles: ["Doctor", "clinician"], icon: User },
 
     // Clinical Schedules & Matrix (Admin, Receptionist)
-    { label: "Calendar Matrix", route: "/dashboard/calendar", roles: ["admin", "Receptionist", "super_admin", "administrator", "reception"], icon: Calendar },
+    { label: "Doctor Schedule", route: "/dashboard/calendar", roles: ["admin", "Receptionist", "super_admin", "administrator", "reception"], icon: Calendar },
     { label: "Appointments", route: "/dashboard/appointments", roles: ["admin", "Receptionist", "super_admin", "administrator", "reception"], icon: FolderHeart },
-    { label: "Physio Scheduling", route: "/dashboard/receptionist/physio", roles: ["admin", "Receptionist", "super_admin", "administrator", "reception"], icon: Activity },
+    { label: "Physio Referrals", route: "/dashboard/receptionist/physio", roles: ["admin", "Receptionist", "super_admin", "administrator", "reception"], icon: Activity },
 
     // Patients (Admin, Receptionist, Physio)
     { label: "Patient Database", route: "/dashboard/patients", roles: ["admin", "Receptionist", "Physiotherapist", "super_admin", "administrator", "reception"], icon: Users },
 
     // Administration & Operations
     { label: "Our Team", route: "/dashboard/staff", roles: ["admin", "super_admin", "administrator"], icon: Users },
-    { label: "Physiotherapy Ledger", route: "/dashboard/payments", roles: ["admin", "Receptionist", "Physiotherapist", "super_admin", "administrator", "reception"], icon: CreditCard },
+    { label: "Physio Ledger", route: "/dashboard/payments", roles: ["admin", "Receptionist", "Physiotherapist", "super_admin", "administrator", "reception"], icon: CreditCard },
     { label: "Physio Reports", route: "/dashboard/physiotherapist/reports", roles: ["admin", "Physiotherapist", "super_admin", "administrator"], icon: FileText },
 
     // Clinic Operating Schedule & Exclusions (Restricted to Admin Only)

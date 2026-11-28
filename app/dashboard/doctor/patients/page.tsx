@@ -374,7 +374,7 @@ export default function DoctorPatientsPage() {
                                     {profileData?.patient.name || "Patient Profile"}
                                 </h2>
                                 <div className="text-xs text-foreground/50 mt-0.5">
-                                    File: <span className="font-mono text-purple-600 font-bold">{profileData?.patient.file_number || "None"}</span> • Mobile: {profileData?.patient.mobile_number}
+                                    File: <span className="font-mono text-purple-600 font-bold">{profileData?.patient.file_number || "None"}</span>
                                 </div>
                             </div>
                             <button
@@ -396,12 +396,12 @@ export default function DoctorPatientsPage() {
                                 {/* Basic Information Card */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 p-4 border border-black/5 dark:border-white/5 text-xs">
                                     <div>
-                                        <span className="text-foreground/50 text-[11px] block">Full Name</span>
-                                        <span className="font-bold text-foreground mt-0.5 block">{profileData.patient.name}</span>
+                                        <span className="text-foreground/50 text-[11px] block">Contact Number</span>
+                                        <span className="font-bold text-foreground mt-0.5 block">{profileData.patient.mobile_number || "—"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-foreground/50 text-[11px] block">File Number</span>
-                                        <span className="font-mono text-purple-600 font-bold mt-0.5 block">{profileData.patient.file_number || "—"}</span>
+                                        <span className="text-foreground/50 text-[11px] block">Patient Notes</span>
+                                        <span className="text-foreground mt-0.5 block">{profileData.patient.notes || "—"}</span>
                                     </div>
                                     <div>
                                         <span className="text-foreground/50 text-[11px] block">Age / Gender</span>

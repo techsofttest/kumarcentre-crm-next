@@ -27,6 +27,7 @@ import {
     ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 import { formatTime12h } from "@/lib/patient-utils";
 
@@ -272,30 +273,8 @@ export default function PhysiotherapistDashboard() {
                 </div>
             </div>
 
-            {/* Notification Alerts */}
-            {alertMessage && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                        <span>{alertMessage}</span>
-                    </div>
-                    <button onClick={() => setAlertMessage(null)} className="text-emerald-800 hover:text-emerald-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                        <span>{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-800 hover:text-red-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Summary KPI Cards (3 Cards) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -565,10 +544,7 @@ export default function PhysiotherapistDashboard() {
                                             </td>
 
                                             <td className="whitespace-nowrap px-5 py-4 font-mono font-semibold">
-                                                {r.sessions_completed}
-                                                {r.sessions_remaining !== null && (
-                                                    <span className="text-foreground/50 text-[11px]"> / {r.sessions_remaining + r.sessions_completed}</span>
-                                                )}
+                                                {r.sessions_completed ?? 0}
                                             </td>
 
                                             <td className="whitespace-nowrap px-5 py-4 text-foreground/60">
@@ -577,48 +553,12 @@ export default function PhysiotherapistDashboard() {
 
                                             <td className="whitespace-nowrap px-5 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                                                    {(r.visit_status === "not_checked_in" || r.visit_status === "completed") && r.status !== "closed" && r.status !== "cancelled" && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={async () => {
-                                                                try {
-                                                                    const res = await api.checkInPhysioReferral(r.id);
-                                                                    setAlertMessage(res.message);
-                                                                    fetchDashboard();
-                                                                } catch (err: any) {
-                                                                    setErrorMessage(err.message || "Check-in failed.");
-                                                                }
-                                                            }}
-                                                            className="h-8 px-2.5 text-xs gap-1 border-sky-300 text-sky-700 hover:bg-sky-50"
-                                                        >
-                                                            Check In
-                                                        </Button>
-                                                    )}
-                                                    {r.visit_status === "checked_in" && r.active_visit_id && (
-                                                        <Button
-                                                            variant="filled"
-                                                            size="sm"
-                                                            onClick={async () => {
-                                                                try {
-                                                                    const res = await api.startPhysioVisitSession(r.active_visit_id);
-                                                                    setAlertMessage(res.message);
-                                                                    fetchDashboard();
-                                                                } catch (err: any) {
-                                                                    setErrorMessage(err.message || "Failed to start session.");
-                                                                }
-                                                            }}
-                                                            className="h-8 px-2.5 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                        >
-                                                            Start Session
-                                                        </Button>
-                                                    )}
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => {
                                                             setSelectedReferralForPay(r);
-                                                            setPayAmount(r.outstanding_balance > 0 ? String(r.outstanding_balance) : "");
+                                                            setPayAmount(r.outstanding_balance > 0 ? String(Math.round(Number(r.outstanding_balance))) : "");
                                                             setPaymentModalOpen(true);
                                                         }}
                                                         className="h-8 px-2.5 text-xs gap-1"
@@ -675,7 +615,7 @@ export default function PhysiotherapistDashboard() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-foreground/60">Current Outstanding:</span>
-                                <span className="font-bold text-red-600 font-mono">₹{selectedReferralForPay.outstanding_balance?.toLocaleString()}</span>
+                                <span className="font-bold text-red-600 font-mono">₹{Math.round(Number(selectedReferralForPay.outstanding_balance ?? 0)).toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -686,11 +626,11 @@ export default function PhysiotherapistDashboard() {
                                 </label>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="1"
                                     required
                                     value={payAmount}
-                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    onChange={(e) => setPayAmount(e.target.value.replace(/\D/g, ""))}
                                     placeholder="Enter payment amount..."
                                     className="h-10 w-full rounded-lg border border-black/15 bg-white dark:bg-zinc-800 px-3 text-sm font-semibold text-foreground focus:border-purple-600 focus:outline-none dark:border-white/15"
                                 />
@@ -808,7 +748,7 @@ export default function PhysiotherapistDashboard() {
                                     required
                                     value={treatmentPerformed}
                                     onChange={(e) => setTreatmentPerformed(e.target.value)}
-                                    placeholder="Specify procedures conducted"
+                                    placeholder=""
                                     className="w-full rounded-lg border border-black/15 bg-white dark:bg-zinc-800 p-2.5 text-xs text-foreground focus:border-purple-600 focus:outline-none dark:border-white/15"
                                 />
                             </div>

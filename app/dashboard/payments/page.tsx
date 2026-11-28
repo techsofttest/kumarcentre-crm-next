@@ -22,6 +22,7 @@ import {
     Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 
 const MONTH_NAMES_SHORT = [
@@ -240,30 +241,8 @@ export default function FinancialLedger() {
                 </div>
             </div>
 
-            {/* Notification Alerts */}
-            {alertMessage && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                        <span>{alertMessage}</span>
-                    </div>
-                    <button onClick={() => setAlertMessage(null)} className="text-emerald-800 hover:text-emerald-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                        <span>{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-800 hover:text-red-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Financial Overview Cards (4 KPIs) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -301,27 +280,7 @@ export default function FinancialLedger() {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    {[
-                        { key: "all", label: "All Transactions" },
-                        { key: "charges", label: "Charges Only" },
-                        { key: "payments", label: "Payments Only" },
-                    ].map((f) => (
-                        <button
-                            key={f.key}
-                            onClick={() => setFilterType(f.key as any)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                filterType === f.key
-                                    ? "bg-purple-600 text-white shadow-sm"
-                                    : "bg-zinc-100 hover:bg-zinc-200 text-foreground/70 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
-                </div>
-
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
                 <div className="relative w-64 md:w-80">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                     <input
@@ -375,7 +334,7 @@ export default function FinancialLedger() {
                                         <tr
                                             key={e.id}
                                             className={`hover:bg-black/[.02] dark:hover:bg-white/[.02] ${
-                                                e.is_reversed ? "opacity-40 line-through bg-zinc-50 dark:bg-zinc-800/30" : ""
+                                                e.is_reversed ? "bg-zinc-50 dark:bg-zinc-800/30" : ""
                                             }`}
                                         >
                                             <td className="px-5 py-4 font-mono font-bold text-purple-600 whitespace-nowrap">

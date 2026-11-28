@@ -87,19 +87,12 @@ export default function PhysioReportsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-6">
                 <div>
-                    <button
-                        onClick={() => router.push("/dashboard/physiotherapist")}
-                        className="flex items-center gap-1.5 text-xs font-bold text-foreground/60 hover:text-foreground transition-colors cursor-pointer mb-2"
-                    >
-                        <ChevronLeft className="h-4 w-4" /> Back to Physiotherapist Dashboard
-                    </button>
+                   
                     <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                         <FileText className="h-8 w-8 text-emerald-600" />
-                        Physiotherapy Treatment & Financial Reports
+                        Physiotherapy Reports
                     </h1>
-                    <p className="text-sm text-foreground/60 mt-1">
-                        Consolidated session audit, patient rehabilitation progress and collection statistics
-                    </p>
+                   
                 </div>
 
                 {/* Date Filter */}

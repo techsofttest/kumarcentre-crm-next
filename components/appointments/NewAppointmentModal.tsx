@@ -443,7 +443,7 @@ export function NewAppointmentModal({ isOpen, onClose, onSuccess }: NewAppointme
                                 </label>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     {[
-                                        { id: "new_registration", label: "New Registration", desc: "First visit, can register inline" },
+                                        { id: "new_registration", label: "New Registration", desc: "First visit" },
                                         { id: "review_consultation", label: "Review Consultation", desc: "Existing patient file required" },
                                         { id: "procedure", label: "Procedure", desc: "Existing patient  & physio assignment" },
                                     ].map((type) => (
@@ -458,8 +458,8 @@ export function NewAppointmentModal({ isOpen, onClose, onSuccess }: NewAppointme
                                                 setShowInlineRegister(false);
                                             }}
                                             className={`flex flex-col text-left p-3.5 rounded-xl border transition-all ${appointmentType === type.id
-                                                    ? "border-purple-600 bg-purple-50/60 dark:bg-purple-950/30 text-purple-950 dark:text-purple-100 ring-1 ring-purple-600"
-                                                    : "border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 bg-white dark:bg-zinc-800/40"
+                                                ? "border-purple-600 bg-purple-50/60 dark:bg-purple-950/30 text-purple-950 dark:text-purple-100 ring-1 ring-purple-600"
+                                                : "border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 bg-white dark:bg-zinc-800/40"
                                                 }`}
                                         >
                                             <span className="text-sm font-bold">{type.label}</span>
@@ -485,8 +485,8 @@ export function NewAppointmentModal({ isOpen, onClose, onSuccess }: NewAppointme
                                                     setHasSearched(false);
                                                 }}
                                                 className={`px-3 py-1 rounded-md font-medium transition-all ${searchType === "mobile"
-                                                        ? "bg-white dark:bg-zinc-900 text-foreground"
-                                                        : "text-foreground/60 hover:text-foreground"
+                                                    ? "bg-white dark:bg-zinc-900 text-foreground"
+                                                    : "text-foreground/60 hover:text-foreground"
                                                     }`}
                                             >
                                                 Mobile Number
@@ -499,8 +499,8 @@ export function NewAppointmentModal({ isOpen, onClose, onSuccess }: NewAppointme
                                                     setHasSearched(false);
                                                 }}
                                                 className={`px-3 py-1 rounded-md font-medium transition-all ${searchType === "file_number"
-                                                        ? "bg-white dark:bg-zinc-900 text-foreground"
-                                                        : "text-foreground/60 hover:text-foreground"
+                                                    ? "bg-white dark:bg-zinc-900 text-foreground"
+                                                    : "text-foreground/60 hover:text-foreground"
                                                     }`}
                                             >
                                                 File Number
@@ -798,10 +798,10 @@ export function NewAppointmentModal({ isOpen, onClose, onSuccess }: NewAppointme
                                                 disabled={!slot.is_available}
                                                 onClick={() => setSelectedSlot(slot.start_time_24)}
                                                 className={`py-2 px-1 text-center rounded-lg border text-xs font-semibold transition-all ${!slot.is_available
-                                                        ? "border-black/5 bg-zinc-100 text-foreground/30 dark:border-white/5 dark:bg-zinc-800/40 cursor-not-allowed line-through"
-                                                        : selectedSlot === slot.start_time_24
-                                                            ? "border-purple-600 bg-purple-600 text-white shadow-none ring-1 ring-purple-600"
-                                                            : "border-black/10 dark:border-white/10 hover:border-purple-500 bg-white dark:bg-zinc-800 text-foreground hover:bg-purple-50/50 dark:hover:bg-purple-950/20"
+                                                    ? "border-black/5 bg-zinc-100 text-foreground/30 dark:border-white/5 dark:bg-zinc-800/40 cursor-not-allowed line-through"
+                                                    : selectedSlot === slot.start_time_24
+                                                        ? "border-purple-600 bg-purple-600 text-white shadow-none ring-1 ring-purple-600"
+                                                        : "border-black/10 dark:border-white/10 hover:border-purple-500 bg-white dark:bg-zinc-800 text-foreground hover:bg-purple-50/50 dark:hover:bg-purple-950/20"
                                                     }`}
                                             >
                                                 {slot.start_time}

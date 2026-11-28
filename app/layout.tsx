@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AnimatedBackground from "@/components/global/AnimatedBackground";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AlertifyToaster } from "@/components/ui/alertify-toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-transparent" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AnimatedBackground />
+          <AlertifyToaster />
           {children}
         </ThemeProvider>
       </body>

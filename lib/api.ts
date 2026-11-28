@@ -108,8 +108,19 @@ export const api = {
     },
     confirmAppointment: (id: number) =>
         apiClient(`/receptionist/appointments/${id}/confirm`, { method: 'PATCH' }),
-    checkInAppointment: (id: number) =>
-        apiClient<{ message: string; appointment: any }>(`/receptionist/appointments/${id}/check-in`, { method: 'POST' }),
+    checkInAppointment: (id: number, payload?: { confirm_late?: boolean; check_in_remarks?: string }) =>
+        apiClient<{
+            message?: string;
+            requires_confirmation?: boolean;
+            check_in_type?: string;
+            warning_message?: string;
+            appointment: any;
+            status: string;
+            status_label?: string;
+        }>(`/receptionist/appointments/${id}/check-in`, {
+            method: 'POST',
+            body: payload ? JSON.stringify(payload) : undefined,
+        }),
     rejectAppointment: (id: number, reason: string) =>
         apiClient(`/receptionist/appointments/${id}/reject`, {
             method: 'PATCH',

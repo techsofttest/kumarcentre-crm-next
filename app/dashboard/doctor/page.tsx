@@ -25,6 +25,7 @@ import {
     AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 import { subscribeToQueueUpdates } from "@/lib/queue-sync";
 import { formatAgeGender } from "@/lib/patient-utils";
@@ -420,25 +421,8 @@ export default function DoctorDashboard() {
 
     return (
         <div className="flex w-full flex-col gap-6 p-8">
-            {/* Notifications */}
-            {alertMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="text-sm font-medium">{alertMessage}</span>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="flex items-center justify-between rounded-xl border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                    <div className="flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                        <span className="text-sm font-medium">{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-600 hover:text-red-800">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {newCheckInToast && (
                 <div className="flex items-center justify-between rounded-xl border border-sky-300 bg-sky-50 p-4 text-sky-900 shadow-sm transition-all animate-in fade-in slide-in-from-top-2 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">

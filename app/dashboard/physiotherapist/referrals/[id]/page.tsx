@@ -33,6 +33,7 @@ import {
     CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 
 const MONTH_NAMES_SHORT = [
@@ -282,30 +283,8 @@ export default function PhysioReferralDetailPage() {
                 </button>
             </div>
 
-            {/* Notification Alerts */}
-            {alertMessage && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                        <span>{alertMessage}</span>
-                    </div>
-                    <button onClick={() => setAlertMessage(null)} className="text-emerald-800 hover:text-emerald-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300 flex items-center justify-between animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                        <span>{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-800 hover:text-red-950">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Referral & Patient Header Card */}
             <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900 p-6 shadow-sm space-y-6">
@@ -390,7 +369,7 @@ export default function PhysioReferralDetailPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                    setPayAmount(financial_summary.outstanding_balance > 0 ? String(financial_summary.outstanding_balance) : "");
+                                    setPayAmount(financial_summary.outstanding_balance > 0 ? String(Math.round(Number(financial_summary.outstanding_balance))) : "");
                                     setPaymentModalOpen(true);
                                 }}
                                 className="gap-2"
@@ -689,7 +668,7 @@ export default function PhysioReferralDetailPage() {
                                     variant="filled"
                                     size="sm"
                                     onClick={() => {
-                                        setPayAmount(financial_summary.outstanding_balance > 0 ? String(financial_summary.outstanding_balance) : "");
+                                        setPayAmount(financial_summary.outstanding_balance > 0 ? String(Math.round(Number(financial_summary.outstanding_balance))) : "");
                                         setPaymentModalOpen(true);
                                     }}
                                     className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
@@ -722,7 +701,7 @@ export default function PhysioReferralDetailPage() {
                                             </tr>
                                         ) : (
                                             ledger.map((entry: any) => (
-                                                <tr key={entry.id} className={entry.is_reversed ? "opacity-40 line-through bg-zinc-50 dark:bg-zinc-900/50" : ""}>
+                                                <tr key={entry.id} className={entry.is_reversed ? "bg-zinc-50 dark:bg-zinc-900/50" : ""}>
                                                     <td className="px-4 py-3 font-mono font-bold text-purple-600">
                                                         {entry.reference_number}
                                                     </td>
@@ -857,11 +836,11 @@ export default function PhysioReferralDetailPage() {
                                 </label>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="1"
                                     required
                                     value={payAmount}
-                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    onChange={(e) => setPayAmount(e.target.value.replace(/\D/g, ""))}
                                     placeholder="Enter payment amount..."
                                     className="h-10 w-full rounded-lg border border-black/15 bg-white dark:bg-zinc-800 px-3 text-sm font-semibold text-foreground focus:border-purple-600 focus:outline-none dark:border-white/15"
                                 />

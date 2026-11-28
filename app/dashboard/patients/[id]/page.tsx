@@ -316,7 +316,7 @@ export default function PatientDetailPage() {
                     });
                 }
             }
-        } catch (_) {}
+        } catch (_) { }
         return results;
     }, [patient]);
 
@@ -405,11 +405,6 @@ export default function PatientDetailPage() {
                         >
                             + Refer to Physio
                         </Button>
-                        <Link href="/dashboard/appointments/new">
-                            <Button variant="filled" size="sm" icon={CalendarIcon} className="bg-purple-600 hover:bg-purple-700 text-white">
-                                Book Appointment
-                            </Button>
-                        </Link>
                     </div>
                 )}
             </div>
@@ -434,21 +429,19 @@ export default function PatientDetailPage() {
                 <div className="flex text-sm font-bold border-b border-black/[.15] dark:border-white/[.22] mb-6 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab("profile")}
-                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer ${
-                            activeTab === "profile"
-                                ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
-                                : "border-transparent text-foreground/70 hover:text-foreground"
-                        }`}
+                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer ${activeTab === "profile"
+                            ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
+                            : "border-transparent text-foreground/70 hover:text-foreground"
+                            }`}
                     >
                         Profile Details
                     </button>
                     <button
                         onClick={() => setActiveTab("upcoming")}
-                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer flex items-center gap-2 ${
-                            activeTab === "upcoming"
-                                ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
-                                : "border-transparent text-foreground/70 hover:text-foreground"
-                        }`}
+                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer flex items-center gap-2 ${activeTab === "upcoming"
+                            ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
+                            : "border-transparent text-foreground/70 hover:text-foreground"
+                            }`}
                     >
                         <span>Upcoming Appointments</span>
                         {upcomingAppointments.length > 0 && (
@@ -459,11 +452,10 @@ export default function PatientDetailPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab("completed")}
-                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer flex items-center gap-2 ${
-                            activeTab === "completed"
-                                ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
-                                : "border-transparent text-foreground/70 hover:text-foreground"
-                        }`}
+                        className={`mr-6 border-b-2 pb-3 transition-colors shrink-0 cursor-pointer flex items-center gap-2 ${activeTab === "completed"
+                            ? "border-purple-600 text-purple-600 dark:text-purple-400 font-bold"
+                            : "border-transparent text-foreground/70 hover:text-foreground"
+                            }`}
                     >
                         <span>Completed Appointments</span>
                         {completedAppointments.length > 0 && (
@@ -474,11 +466,10 @@ export default function PatientDetailPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab("physio")}
-                        className={`border-b-2 pb-3 transition-colors shrink-0 cursor-pointer ${
-                            activeTab === "physio"
-                                ? "border-teal-600 text-teal-600 dark:text-teal-400 font-bold"
-                                : "border-transparent text-foreground/70 hover:text-foreground"
-                        }`}
+                        className={`border-b-2 pb-3 transition-colors shrink-0 cursor-pointer ${activeTab === "physio"
+                            ? "border-teal-600 text-teal-600 dark:text-teal-400 font-bold"
+                            : "border-transparent text-foreground/70 hover:text-foreground"
+                            }`}
                     >
                         Physio Notes & Schedules
                     </button>
@@ -564,7 +555,7 @@ export default function PatientDetailPage() {
                                 </div>
 
                                 <div>
-                                    <label className="mb-1 block text-xs font-bold text-foreground">Calculated Age</label>
+                                    <label className="mb-1 block text-xs font-bold text-foreground">Age</label>
                                     <div className="h-10 w-full rounded-lg border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/60 px-3 text-xs font-semibold text-foreground/80 flex items-center">
                                         {calculatedAge !== null ? `${calculatedAge} years old` : (patient.age ? `${patient.age} years old` : "Enter DOB to calculate age")}
                                     </div>
@@ -581,11 +572,10 @@ export default function PatientDetailPage() {
                                                 key={g}
                                                 type="button"
                                                 onClick={() => setEditGender(g)}
-                                                className={`py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                                                    editGender === g
-                                                        ? "border-purple-600 bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200"
-                                                        : "border-black/15 dark:border-white/15 bg-white dark:bg-zinc-800 text-foreground/70 hover:text-foreground"
-                                                }`}
+                                                className={`py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${editGender === g
+                                                    ? "border-purple-600 bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200"
+                                                    : "border-black/15 dark:border-white/15 bg-white dark:bg-zinc-800 text-foreground/70 hover:text-foreground"
+                                                    }`}
                                             >
                                                 {g === "M" ? "Male (M)" : g === "F" ? "Female (F)" : "Other (O)"}
                                             </button>
@@ -594,7 +584,7 @@ export default function PatientDetailPage() {
                                 </div>
 
                                 <div>
-                                    <label className="mb-1 block text-xs font-bold text-foreground">Registration Date (Auto-generated)</label>
+                                    <label className="mb-1 block text-xs font-bold text-foreground">Registration Date</label>
                                     <div className="h-10 w-full rounded-lg border border-black/10 dark:border-white/10 bg-zinc-100 dark:bg-zinc-800/60 px-3 text-xs font-mono font-medium text-foreground/80 flex items-center">
                                         {formatDateDisplay(patient.registration_date || patient.created_at || "")}
                                     </div>

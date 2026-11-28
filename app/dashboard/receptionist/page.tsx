@@ -16,6 +16,7 @@ import {
     Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { api, ApiError } from "@/lib/api";
 import { NewAppointmentModal } from "@/components/appointments/NewAppointmentModal";
@@ -53,12 +54,15 @@ export default function ReceptionistDashboard() {
     const [counts, setCounts] = useState({
         pending: 0,
         confirmed: 0,
+        awaiting_check_in: 0,
+        no_show: 0,
         today: 0,
         upcoming: 0,
         cancelled: 0,
     });
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"today" | "pending" | "confirmed" | "upcoming" | "cancelled">("today");
+    const [activeTab, setActiveTab] = useState<"today" | "awaiting_check_in" | "pending" | "confirmed" | "upcoming" | "no_show" | "cancelled">("today");
+    const [lateCheckInModal, setLateCheckInModal] = useState<{ id: number; message: string; remarks: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -116,10 +120,23 @@ export default function ReceptionistDashboard() {
         }
     };
 
-    const handleCheckIn = async (id: number) => {
+    const handleCheckIn = async (id: number, confirmLate = false, remarks?: string) => {
         setIsSubmittingAction(true);
+        setErrorMessage(null);
         try {
-            await api.checkInAppointment(id);
+            const res = await api.checkInAppointment(
+                id,
+                confirmLate ? { confirm_late: true, check_in_remarks: remarks?.trim() || undefined } : undefined
+            );
+            if (res.requires_confirmation) {
+                setLateCheckInModal({
+                    id,
+                    message: res.warning_message || "The scheduled appointment time has passed. Are you sure you want to check in this patient?",
+                    remarks: "",
+                });
+                return;
+            }
+            setLateCheckInModal(null);
             setAlertMessage("Patient successfully checked in and moved to doctor queue.");
             notifyQueueUpdate("CHECK_IN", { appointmentId: id });
             fetchAppointments();
@@ -179,25 +196,8 @@ export default function ReceptionistDashboard() {
 
     return (
         <div className="flex w-full flex-col gap-8 p-8">
-            {/* Notifications */}
-            {alertMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="text-sm font-medium">{alertMessage}</span>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="flex items-center justify-between rounded-xl border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                    <div className="flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
-                        <span className="text-sm font-medium">{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-600 hover:text-red-800">
-                        <XCircle className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Header */}
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -307,18 +307,29 @@ export default function ReceptionistDashboard() {
             <div className="flex flex-col gap-4 rounded-xl border border-black/10 bg-white p-6  dark:border-white/10 dark:bg-zinc-900">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-4">
                     <div className="flex flex-wrap gap-2">
-                        {(["today", "pending", "confirmed", "upcoming", "cancelled"] as const).map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold capitalize transition-all cursor-pointer ${activeTab === tab
-                                        ? "bg-purple-600 text-white "
-                                        : "bg-slate-100 text-foreground/70 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300"
-                                    }`}
-                            >
-                                {tab} ({counts[tab as keyof typeof counts] ?? 0})
-                            </button>
-                        ))}
+                        {(["today", "awaiting_check_in", "pending", "confirmed", "upcoming", "no_show", "cancelled"] as const).map((tab) => {
+                            const labelMap: Record<string, string> = {
+                                today: "Today",
+                                awaiting_check_in: "Awaiting Check-in",
+                                pending: "Pending",
+                                confirmed: "Confirmed",
+                                upcoming: "Upcoming",
+                                no_show: "No Show",
+                                cancelled: "Cancelled",
+                            };
+                            return (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${activeTab === tab
+                                            ? "bg-purple-600 text-white "
+                                            : "bg-slate-100 text-foreground/70 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300"
+                                        }`}
+                                >
+                                    {labelMap[tab]} ({counts[tab as keyof typeof counts] ?? 0})
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
@@ -390,12 +401,21 @@ export default function ReceptionistDashboard() {
                                         <td className="px-4 py-3.5">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${apt.status === "confirmed"
                                                     ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                                    : apt.status === "pending_confirmation"
-                                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                                                        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                                    : apt.status === "checked_in"
+                                                        ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300"
+                                                        : apt.status === "pending_confirmation"
+                                                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                                            : apt.status === "completed"
+                                                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                                                 }`}>
-                                                {apt.status.replace('_', ' ')}
+                                                {(apt as any).status_label || (apt.status === "no_show" ? "No Show" : apt.status.replace('_', ' '))}
                                             </span>
+                                            {(apt as any).check_in_type && (
+                                                <div className="mt-1 text-[10px] font-medium text-foreground/60">
+                                                    Check-in: {(apt as any).check_in_type === "late" ? "Late" : "On Time"}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3.5 text-right space-x-2">
                                             <button
@@ -431,16 +451,18 @@ export default function ReceptionistDashboard() {
 
                                             {apt.status === "confirmed" && (
                                                 <>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="filled"
-                                                        onClick={() => handleCheckIn(apt.id)}
-                                                        disabled={isSubmittingAction}
-                                                        className="bg-sky-600 hover:bg-sky-700 text-white"
-                                                    >
-                                                        <UserCheck className="h-3.5 w-3.5 mr-1" />
-                                                        Check In
-                                                    </Button>
+                                                    {(apt as any).check_in_eligibility?.eligible && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="filled"
+                                                            onClick={() => handleCheckIn(apt.id)}
+                                                            disabled={isSubmittingAction}
+                                                            className="bg-sky-600 hover:bg-sky-700 text-white"
+                                                        >
+                                                            <UserCheck className="h-3.5 w-3.5 mr-1" />
+                                                            Check In
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
@@ -525,6 +547,57 @@ export default function ReceptionistDashboard() {
                     setTimeout(() => setAlertMessage(null), 5000);
                 }}
             />
+
+            {/* Late Check-in Confirmation Modal */}
+            {lateCheckInModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900 space-y-4">
+                        <h3 className="text-base font-bold text-amber-700 dark:text-amber-400">
+                            Late Check-In Confirmation
+                        </h3>
+                        <p className="text-sm text-foreground/80">
+                            {lateCheckInModal.message}
+                        </p>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/70 mb-1">
+                                Check-in Remarks (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                value={lateCheckInModal.remarks}
+                                onChange={(e) =>
+                                    setLateCheckInModal((prev) =>
+                                        prev ? { ...prev, remarks: e.target.value } : null
+                                    )
+                                }
+                                placeholder="Optional arrival remarks..."
+                                className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 px-3 py-2 text-xs focus:border-purple-600 focus:outline-none"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={isSubmittingAction}
+                                onClick={() => setLateCheckInModal(null)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="filled"
+                                size="sm"
+                                disabled={isSubmittingAction}
+                                onClick={() => handleCheckIn(lateCheckInModal.id, true, lateCheckInModal.remarks)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white"
+                            >
+                                {isSubmittingAction ? "Checking In..." : "Confirm Check In"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

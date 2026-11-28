@@ -110,7 +110,7 @@ export default function ReceptionistPhysioPage() {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                         <Activity className="h-6 w-6 text-purple-600" />
-                        Physiotherapy Referrals & Arrival Desk
+                        Physio Referrals
                     </h1>
                     <p className="text-xs text-foreground/60 mt-1">
                         Search arriving patients, manage referrals, and initiate treatment sessions
@@ -189,8 +189,8 @@ export default function ReceptionistPhysioPage() {
                             <tr>
                                 <th className="px-4 py-3">Referral #</th>
                                 <th className="px-4 py-3">Patient</th>
-                                <th className="px-4 py-3">Physiotherapist</th>
                                 <th className="px-4 py-3">Status</th>
+                                <th className="px-4 py-3">Total Paid</th>
                                 <th className="px-4 py-3">Outstanding</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
@@ -207,9 +207,6 @@ export default function ReceptionistPhysioPage() {
                                                 {r.patient?.file_number || `#${r.patient?.id}`} • {r.patient?.mobile_number}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3">
-                                            {r.assigned_physiotherapist || <span className="text-amber-600 font-semibold">Unassigned</span>}
-                                        </td>
                                         <td className="px-4 py-3 capitalize">
                                             {r.status === "awaiting_billing" ? (
                                                 <span className="rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-2.5 py-0.5 text-[11px] font-semibold">
@@ -219,8 +216,19 @@ export default function ReceptionistPhysioPage() {
                                                 r.status_label || r.status
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 font-mono">
-                                            ₹{Number(r.outstanding_balance ?? 0).toLocaleString()}
+                                        <td className="px-4 py-3 font-mono font-semibold">
+                                            {Number(r.total_payments ?? 0) > 0 ? (
+                                                <span className="text-emerald-600">₹{Number(r.total_payments).toLocaleString()}</span>
+                                            ) : (
+                                                <span className="text-foreground/40">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 font-mono font-semibold">
+                                            {Number(r.outstanding_balance ?? 0) > 0 ? (
+                                                <span className="text-red-600">₹{Number(r.outstanding_balance).toLocaleString()}</span>
+                                            ) : (
+                                                <span className="text-foreground/40">-</span>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-right space-x-2">
                                             {!isClosedOrCancelled && (
@@ -233,7 +241,7 @@ export default function ReceptionistPhysioPage() {
                                                             setSelectedPhysioId(physios[0]?.id || "");
                                                         }}
                                                     >
-                                                        Arrange / Billing
+                                                        Edit
                                                     </Button>
                                                 </>
                                             )}

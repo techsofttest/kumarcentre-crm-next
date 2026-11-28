@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { FlatpickrDob } from "@/components/ui/flatpickr-dob";
 import {
     ChevronLeft,
     ChevronRight,
@@ -50,6 +51,17 @@ const convertTimeToMinutes = (t: string): number => {
     const hrs = parseInt(parts[0], 10) || 0;
     const mins = parseInt(parts[1], 10) || 0;
     return hrs * 60 + mins;
+};
+
+const formatTime12h = (t: string): string => {
+    if (!t) return "";
+    const parts = t.split(":");
+    const hrs = parseInt(parts[0], 10);
+    const mins = parseInt(parts[1], 10);
+    if (Number.isNaN(hrs) || Number.isNaN(mins)) return t;
+    const suffix = hrs >= 12 ? "PM" : "AM";
+    const h12 = hrs % 12 || 12;
+    return `${String(h12).padStart(2, "0")}:${String(mins).padStart(2, "0")} ${suffix}`;
 };
 
 export default function CalendarMatrix() {
@@ -111,25 +123,6 @@ export default function CalendarMatrix() {
                 });
             });
 
-            // Add active physiotherapist lane
-            if (appointmentsRes.physiotherapists && appointmentsRes.physiotherapists.length > 0) {
-                appointmentsRes.physiotherapists.forEach((p: any) => {
-                    lanes.push({
-                        id: `physio-${p.id}`,
-                        name: p.name,
-                        role: "Physiotherapist",
-                        specialization: "Physical Therapy & Rehab",
-                    });
-                });
-            } else {
-                lanes.push({
-                    id: "physio-default",
-                    name: "Lead Physiotherapist",
-                    role: "Physiotherapist",
-                    specialization: "Physical Therapy & Rehab",
-                });
-            }
-
             setStaffList(lanes);
 
             // 2. Map appointments onto grid
@@ -138,11 +131,7 @@ export default function CalendarMatrix() {
                 const endMins = convertTimeToMinutes(apt.end_time);
                 const duration = Math.max(endMins - startMins, 30);
 
-                // Determine lane: if procedure and assigned to physio, assign to physio lane, else doctor lane
-                let laneId: number | string = apt.doctor_id;
-                if (apt.appointment_type === "procedure") {
-                    laneId = apt.assigned_physio_id ? `physio-${apt.assigned_physio_id}` : "physio-default";
-                }
+                const laneId: number | string = apt.doctor_id;
 
                 return {
                     id: apt.id,
@@ -254,47 +243,22 @@ export default function CalendarMatrix() {
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center pb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                        Calendar Matrix
+                        Doctor Schedule
                     </h1>
                 </div>
 
                 {/* Date Controls & Filters */}
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <div className="flex items-center gap-1 rounded-lg border border-black/10 bg-white p-1 dark:border-white/10 dark:bg-zinc-900">
-                        <button
-                            onClick={handlePrevDay}
-                            className="rounded p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 text-foreground/70 transition-colors"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={handleToday}
-                            className="px-2.5 py-1 text-xs font-bold text-foreground hover:bg-slate-100 dark:hover:bg-zinc-800 rounded transition-colors"
-                        >
-                            Today
-                        </button>
-                        <button
-                            onClick={handleNextDay}
-                            className="rounded p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 text-foreground/70 transition-colors"
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
-                        <span className="font-bold text-xs text-purple-700 dark:text-purple-300 px-2 border-l border-black/10 dark:border-white/10">
-                            {formattedDate}
-                        </span>
-                    </div>
-
-                    {/* Search */}
-                    <div className="relative w-48">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground/40" />
-                        <input
-                            type="text"
-                            placeholder="Filter staff or patient..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-md border border-foreground/20 bg-white dark:bg-zinc-900 pl-8 pr-3 py-1 text-xs text-foreground focus:border-purple-600 focus:outline-none"
-                        />
-                    </div>
+                    <FlatpickrDob
+                        value={formattedDate}
+                        onChange={(val) => {
+                            if (val) setCurrentDate(new Date(`${val}T00:00:00`));
+                        }}
+                        placeholder="DD-MM-YYYY"
+                        maxDate=""
+                        defaultYear={new Date().getFullYear()}
+                        className="w-44"
+                    />
 
                     <Button
                         variant="outline"
@@ -418,7 +382,7 @@ export default function CalendarMatrix() {
                                                     </div>
 
                                                     <div className="mt-auto flex items-center justify-between text-[10px] opacity-80 pt-1 font-mono">
-                                                        <span>{apt.startTime} ({apt.durationMinutes}m)</span>
+                                                        <span>{formatTime12h(apt.startTime)} ({apt.durationMinutes}m)</span>
                                                         <span>{apt.reference}</span>
                                                     </div>
                                                 </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { NewAppointmentModal } from "@/components/appointments/NewAppointmentModal";
 import { NewPhysioReferralModal } from "@/components/physio/NewPhysioReferralModal";
@@ -144,7 +145,7 @@ export default function AppointmentsManager() {
         cancelled: 0,
     });
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"all" | "today" | "pending" | "confirmed" | "upcoming" | "cancelled">("all");
+    const [activeTab, setActiveTab] = useState<"today" | "pending" | "confirmed" | "upcoming" | "no_show" | "cancelled" | "all">("today");
     const [searchQuery, setSearchQuery] = useState("");
     const [filterDate, setFilterDate] = useState("");
 
@@ -225,10 +226,17 @@ export default function AppointmentsManager() {
     };
 
     // Receptionist Check-In
-    const handleCheckIn = async (id: number) => {
+    const handleCheckIn = async (id: number, confirmLate = false) => {
         setIsSubmittingAction(true);
         try {
-            await api.checkInAppointment(id);
+            const res = await api.checkInAppointment(id, confirmLate ? { confirm_late: true } : undefined);
+            if (res.requires_confirmation) {
+                setIsSubmittingAction(false);
+                if (window.confirm(res.warning_message || "The scheduled appointment time has passed. Are you sure you want to check in this patient?")) {
+                    await handleCheckIn(id, true);
+                }
+                return;
+            }
             setAlertMessage("Patient successfully checked in and moved to doctor queue.");
             notifyQueueUpdate("CHECK_IN", { appointmentId: id });
             fetchAppointments();
@@ -289,25 +297,8 @@ export default function AppointmentsManager() {
 
     return (
         <div className="flex w-full flex-col gap-6 p-8">
-            {/* Notifications */}
-            {alertMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <Check className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <span className="text-sm font-medium">{alertMessage}</span>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="flex items-center justify-between rounded-xl border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                    <div className="flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                        <span className="text-sm font-medium">{errorMessage}</span>
-                    </div>
-                    <button onClick={() => setErrorMessage(null)} className="text-red-600 hover:text-red-800">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Header */}
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -343,12 +334,13 @@ export default function AppointmentsManager() {
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-4">
                     <div className="flex flex-wrap gap-2">
                         {[
-                            { id: "all", label: "All Bookings", count: appointments.length },
                             { id: "today", label: "Today", count: counts.today },
                             { id: "pending", label: "Pending", count: counts.pending },
                             { id: "confirmed", label: "Confirmed", count: counts.confirmed },
                             { id: "upcoming", label: "Upcoming", count: counts.upcoming },
+                            { id: "no_show", label: "No Show", count: (counts as any).no_show ?? 0 },
                             { id: "cancelled", label: "Cancelled", count: counts.cancelled },
+                            { id: "all", label: "All Bookings", count: appointments.length },
                         ].map((t) => (
                             <button
                                 key={t.id}
@@ -460,24 +452,24 @@ export default function AppointmentsManager() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                                                apt.status === "confirmed"
+                                                ((apt as any).display_status ?? apt.status) === "confirmed"
                                                     ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                                    : apt.status === "checked_in"
+                                                    : ((apt as any).display_status ?? apt.status) === "checked_in"
                                                     ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300"
-                                                    : apt.status === "in_consultation"
+                                                    : ((apt as any).display_status ?? apt.status) === "in_consultation"
                                                     ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
-                                                    : apt.status === "pending_confirmation"
+                                                    : ((apt as any).display_status ?? apt.status) === "pending_confirmation"
                                                     ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                                                    : apt.status === "completed"
+                                                    : ((apt as any).display_status ?? apt.status) === "completed"
                                                     ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                                                     : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                                             }`}>
-                                                {apt.status.replace(/_/g, ' ')}
+                                                {(apt as any).status_label || (((apt as any).display_status ?? apt.status) === "no_show" ? "No Show" : apt.status.replace(/_/g, ' '))}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                             <div className="flex items-center justify-end gap-1.5">
-                                                {apt.status === "confirmed" && (
+                                                {apt.status === "confirmed" && (apt as any).check_in_eligibility?.eligible && (
                                                     <button
                                                         type="button"
                                                         onClick={() => handleCheckIn(apt.id)}
@@ -522,19 +514,19 @@ export default function AppointmentsManager() {
                                 <span className="text-foreground/50 uppercase tracking-wider text-[10px]">Current Status</span>
                                 <div className="mt-1">
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${
-                                        selectedApt.status === "confirmed"
+                                        ((selectedApt as any).display_status ?? selectedApt.status) === "confirmed"
                                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                            : selectedApt.status === "checked_in"
+                                            : ((selectedApt as any).display_status ?? selectedApt.status) === "checked_in"
                                             ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300"
-                                            : selectedApt.status === "in_consultation"
+                                            : ((selectedApt as any).display_status ?? selectedApt.status) === "in_consultation"
                                             ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
-                                            : selectedApt.status === "pending_confirmation"
+                                            : ((selectedApt as any).display_status ?? selectedApt.status) === "pending_confirmation"
                                             ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                                            : selectedApt.status === "completed"
+                                            : ((selectedApt as any).display_status ?? selectedApt.status) === "completed"
                                             ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                                             : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                                     }`}>
-                                        {selectedApt.status.replace(/_/g, ' ')}
+                                        {(selectedApt as any).status_label || (((selectedApt as any).display_status ?? selectedApt.status) === "no_show" ? "No Show" : selectedApt.status.replace(/_/g, ' '))}
                                     </span>
                                 </div>
                             </div>
@@ -654,18 +646,20 @@ export default function AppointmentsManager() {
                                 </div>
                             )}
 
-                            {selectedApt.status === "confirmed" && (
+                            {selectedApt.status === "confirmed" && !(selectedApt as any).is_no_show && (
                                 <div className="flex flex-col gap-2">
-                                    <Button
-                                        variant="filled"
-                                        size="sm"
-                                        onClick={() => handleCheckIn(selectedApt.id)}
-                                        disabled={isSubmittingAction}
-                                        className="bg-sky-600 hover:bg-sky-700 text-white w-full flex items-center justify-center gap-1.5"
-                                    >
-                                        <UserCheck className="h-4 w-4" />
-                                        Check In Patient (Send to Doctor Queue)
-                                    </Button>
+                                    {(selectedApt as any).check_in_eligibility?.eligible && (
+                                        <Button
+                                            variant="filled"
+                                            size="sm"
+                                            onClick={() => handleCheckIn(selectedApt.id)}
+                                            disabled={isSubmittingAction}
+                                            className="bg-sky-600 hover:bg-sky-700 text-white w-full flex items-center justify-center gap-1.5"
+                                        >
+                                            <UserCheck className="h-4 w-4" />
+                                            Check In Patient (Send to Doctor Queue)
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="outline"
                                         size="sm"

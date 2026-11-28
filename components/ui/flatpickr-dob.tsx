@@ -11,8 +11,9 @@ interface FlatpickrDobProps {
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    minDate?: string;
     maxDate?: string; // defaults to today
-    defaultYear?: number; // defaults to 1980
+    defaultYear?: number; // defaults to 1995
 }
 
 export function FlatpickrDob({
@@ -21,8 +22,9 @@ export function FlatpickrDob({
     placeholder = "DD-MM-YYYY",
     disabled = false,
     className = "",
+    minDate,
     maxDate = "today",
-    defaultYear = 1980,
+    defaultYear = 1995,
 }: FlatpickrDobProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const fpRef = useRef<flatpickr.Instance | null>(null);
@@ -32,18 +34,21 @@ export function FlatpickrDob({
 
         fpRef.current = flatpickr(inputRef.current, {
             dateFormat: "d-m-Y", // displays as dd-MM-yyyy e.g. 15-08-1995
-            maxDate: maxDate,
+            minDate: minDate || undefined,
+            maxDate: maxDate || undefined,
             defaultDate: value ? value.split("T")[0] : undefined,
             disableMobile: true,
             allowInput: true,
             onReady: (selectedDates, dateStr, instance) => {
-                if (!instance.selectedDates || instance.selectedDates.length === 0) {
-                    instance.jumpToDate(`${defaultYear}-01-01`);
+                if ((!instance.selectedDates || instance.selectedDates.length === 0) && defaultYear) {
+                    instance.jumpToDate(new Date(defaultYear, 0, 1));
                 }
             },
             onOpen: (selectedDates, dateStr, instance) => {
-                if (!instance.selectedDates || instance.selectedDates.length === 0) {
-                    instance.jumpToDate(`${defaultYear}-01-01`);
+                if ((!instance.selectedDates || instance.selectedDates.length === 0) && defaultYear) {
+                    instance.changeYear(defaultYear);
+                    instance.changeMonth(0, false);
+                    instance.jumpToDate(new Date(defaultYear, 0, 1));
                 }
             },
             onChange: (selectedDates) => {

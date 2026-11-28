@@ -18,6 +18,7 @@ import {
     Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 
 interface DoctorRecord {
@@ -133,20 +134,8 @@ export default function StaffManagement() {
 
     return (
         <div className="flex w-full flex-col gap-8 p-8">
-            {/* Notifications */}
-            {alertMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="text-sm font-medium">{alertMessage}</span>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                    <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                    <span>{errorMessage}</span>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {/* Header */}
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
