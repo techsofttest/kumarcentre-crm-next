@@ -30,37 +30,10 @@ import { Button } from "@/components/ui/button";
 import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { api, ApiError } from "@/lib/api";
 import { formatTime12h } from "@/lib/patient-utils";
-
-const MONTH_NAMES_SHORT = [
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
-];
+import { formatIstDate } from "@/lib/date-utils";
 
 function formatDateDisplay(dateStr: string | null | undefined): string {
-    if (!dateStr) return "—";
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        let year: string;
-        let monthStr: string;
-        let day: string;
-        if (parts[0].length === 4) {
-            year = parts[0];
-            monthStr = parts[1];
-            day = parts[2].padStart(2, "0");
-        } else if (parts[2].length === 4) {
-            day = parts[0].padStart(2, "0");
-            monthStr = parts[1];
-            year = parts[2];
-        } else {
-            return dateStr;
-        }
-        const monthNum = parseInt(monthStr, 10);
-        if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
-            return `${day}-${MONTH_NAMES_SHORT[monthNum - 1]}-${year}`;
-        }
-    }
-    return dateStr;
+    return formatIstDate(dateStr, "—");
 }
 
 export default function PhysiotherapistDashboard() {

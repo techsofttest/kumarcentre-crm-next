@@ -74,68 +74,18 @@ interface CompletedAppointmentItem {
     completed_at?: string | null;
 }
 
+import { formatIstDate, formatIstDateNumeric, formatIstTime12h, toIstYmd } from "@/lib/date-utils";
+
 function formatTime12h(timeStr: string | null | undefined): string {
-    if (!timeStr) return "";
-
-    if (timeStr.includes("T") || timeStr.includes("Z")) {
-        const d = new Date(timeStr);
-        if (!isNaN(d.getTime())) {
-            return d.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-                timeZone: "Asia/Kolkata",
-            });
-        }
-    }
-
-    if (timeStr.includes(" ") && timeStr.includes("-")) {
-        const timeOnly = timeStr.split(" ")[1];
-        if (timeOnly) {
-            timeStr = timeOnly;
-        }
-    }
-
-    const parts = timeStr.slice(0, 5).split(":");
-    if (parts.length !== 2) return timeStr;
-    const h = parseInt(parts[0], 10);
-    const m = parts[1];
-    if (isNaN(h)) return timeStr;
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h % 12 || 12;
-    return `${String(h12).padStart(2, "0")}:${m} ${ampm}`;
+    return formatIstTime12h(timeStr, "", true);
 }
 
-const MONTH_NAMES_SHORT = [
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
-];
-
 function formatDateDisplay(dateStr: string): string {
-    if (!dateStr) return "";
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        const year = parts[0];
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parts[2].padStart(2, "0");
-        const monthName = MONTH_NAMES_SHORT[monthIndex] || parts[1];
-        return `${day}-${monthName}-${year}`;
-    }
-    return dateStr;
+    return formatIstDate(dateStr, "");
 }
 
 function formatDobNumeric(dateStr: string | null | undefined): string {
-    if (!dateStr) return "";
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        const year = parts[0];
-        const month = parts[1].padStart(2, "0");
-        const day = parts[2].padStart(2, "0");
-        return `${day}-${month}-${year}`;
-    }
-    return dateStr;
+    return formatIstDateNumeric(dateStr, "");
 }
 
 export default function PatientDetailPage() {
@@ -197,7 +147,7 @@ export default function PatientDetailPage() {
             setEditMobile(p.mobile_number || "");
             setEditAltMobile(p.alternate_contact_number || "");
             setEditEmail(p.email || "");
-            setEditDob(p.date_of_birth ? p.date_of_birth.split("T")[0] : "");
+            setEditDob(toIstYmd(p.date_of_birth));
             setEditGender((p.gender as "M" | "F" | "O") || "");
             setEditNotes(p.notes || "");
         } catch (err: any) {

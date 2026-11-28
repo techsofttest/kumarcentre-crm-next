@@ -25,47 +25,13 @@ import { FlatpickrDob } from "@/components/ui/flatpickr-dob";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { api, ApiError } from "@/lib/api";
 import { getPatientAge } from "@/lib/patient-utils";
-
-const MONTH_NAMES_SHORT = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
+import { formatIstDate, formatIstTime12h, getTodayIstYmd } from "@/lib/date-utils";
 
 function formatConfirmationDateTime(dateStr: string | null | undefined, timeStr: string | null | undefined): string {
     if (!dateStr) return "";
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    let formattedDate = cleanDate;
-    if (parts.length === 3) {
-        const year = parts[0];
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parts[2].padStart(2, "0");
-        const monthName = MONTH_NAMES_SHORT[monthIndex] || parts[1];
-        formattedDate = `${day}-${monthName}-${year}`;
-    }
-
+    const formattedDate = formatIstDate(dateStr, "");
     if (!timeStr) return formattedDate;
-
-    let formattedTime = timeStr.trim();
-    const match12h = formattedTime.match(/^(\d{1,2}):(\d{2})(\s)?(AM|PM)$/i);
-    if (match12h) {
-        const h = match12h[1].padStart(2, "0");
-        const m = match12h[2];
-        const p = match12h[4].toUpperCase();
-        formattedTime = `${h}:${m} ${p}`;
-    } else {
-        const cleanTime = formattedTime.includes("T") ? formattedTime.split("T")[1] : formattedTime;
-        const timeParts = cleanTime.slice(0, 5).split(":");
-        if (timeParts.length === 2) {
-            const h = parseInt(timeParts[0], 10);
-            const m = timeParts[1];
-            const period = h >= 12 ? "PM" : "AM";
-            const hour12 = h % 12 === 0 ? 12 : h % 12;
-            const hour12Pad = String(hour12).padStart(2, "0");
-            formattedTime = `${hour12Pad}:${m} ${period}`;
-        }
-    }
-
+    const formattedTime = formatIstTime12h(timeStr, "", true);
     return `${formattedDate} ${formattedTime}`;
 }
 
@@ -142,10 +108,7 @@ export default function NewAppointmentPage() {
     // Step 3: Doctor, Date, Slots
     const [doctors, setDoctors] = useState<DoctorItem[]>([]);
     const [selectedDoctorId, setSelectedDoctorId] = useState<number | "">("");
-    const [appointmentDate, setAppointmentDate] = useState(() => {
-        const today = new Date();
-        return today.toISOString().slice(0, 10);
-    });
+    const [appointmentDate, setAppointmentDate] = useState(() => getTodayIstYmd());
     const [slots, setSlots] = useState<SlotItem[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<string>("");
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);

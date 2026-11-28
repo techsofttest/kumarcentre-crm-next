@@ -8,6 +8,7 @@ import {
     X,
     ChevronDown
 } from "lucide-react";
+import { getTodayIstYmd, IST_TIMEZONE } from "@/lib/date-utils";
 
 interface DatePickerProps {
     value?: string; // Format: "YYYY-MM-DD"
@@ -80,12 +81,13 @@ export function DatePicker({
     // Helpers
     const formatDisplay = (val: string) => {
         if (!val) return "";
-        const d = new Date(val + "T00:00:00");
+        const d = new Date(val + "T00:00:00+05:30");
         if (isNaN(d.getTime())) return val;
         return d.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
-            year: "numeric"
+            year: "numeric",
+            timeZone: IST_TIMEZONE,
         });
     };
 
@@ -104,12 +106,7 @@ export function DatePicker({
     };
 
     const isToday = (year: number, month: number, day: number) => {
-        const today = new Date();
-        return (
-            today.getFullYear() === year &&
-            today.getMonth() === month &&
-            today.getDate() === day
-        );
+        return `${year}-${pad(month + 1)}-${pad(day)}` === getTodayIstYmd();
     };
 
     const handleSelectDay = (day: number) => {

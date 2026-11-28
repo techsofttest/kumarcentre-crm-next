@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { mockPatientsData } from "../../data";
+import { getTodayIstYmd } from "@/lib/date-utils";
 import {
   ThreeDFourDScanForm,
   AnomalyScanForm,
@@ -118,7 +119,7 @@ function NewReportPageContent() {
         email: patient.email,
         mobile: patient.phone,
         addressLine1: patient.address,
-        registrationDate: new Date().toISOString().split("T")[0]
+        registrationDate: getTodayIstYmd()
       });
     } else {
       setFormData(defaultData);
@@ -139,7 +140,7 @@ function NewReportPageContent() {
       id: `DOC-${Math.floor(100 + Math.random() * 900)}`,
       title: docTitle,
       type: "Scan" as const,
-      date: new Date().toISOString().split("T")[0],
+      date: getTodayIstYmd(),
       status: "Completed" as const,
       patientId: patientId
     };

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, ApiError } from "@/lib/api";
+import { getTodayIstYmd } from "@/lib/date-utils";
 
 interface NewPhysioReferralModalProps {
     isOpen: boolean;
@@ -46,7 +47,7 @@ export function NewPhysioReferralModal({
     const [selectedPhysioId, setSelectedPhysioId] = useState<number | "">("");
 
     // Referral Details
-    const [referralDate, setReferralDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [referralDate, setReferralDate] = useState(() => getTodayIstYmd());
     const [treatmentInstructions, setTreatmentInstructions] = useState("");
     const [treatmentCost, setTreatmentCost] = useState("5000");
     const [clinicalRemarks, setClinicalRemarks] = useState("");

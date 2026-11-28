@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import { toIstYmd } from "@/lib/date-utils";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 interface FlatpickrDobProps {
@@ -36,7 +37,7 @@ export function FlatpickrDob({
             dateFormat: "d-m-Y", // displays as dd-MM-yyyy e.g. 15-08-1995
             minDate: minDate || undefined,
             maxDate: maxDate || undefined,
-            defaultDate: value ? value.split("T")[0] : undefined,
+            defaultDate: value ? toIstYmd(value) || undefined : undefined,
             disableMobile: true,
             allowInput: true,
             onReady: (selectedDates, dateStr, instance) => {
@@ -75,7 +76,7 @@ export function FlatpickrDob({
     // Sync external value changes
     useEffect(() => {
         if (fpRef.current) {
-            const cleanVal = value ? value.split("T")[0] : "";
+            const cleanVal = value ? toIstYmd(value) : "";
             const currentSelected = fpRef.current.selectedDates[0];
             const currentVal = currentSelected
                 ? `${currentSelected.getFullYear()}-${String(currentSelected.getMonth() + 1).padStart(2, "0")}-${String(currentSelected.getDate()).padStart(2, "0")}`

@@ -24,59 +24,16 @@ import { Button } from "@/components/ui/button";
 import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { FlatpickrTime } from "@/components/ui/flatpickr-time";
 import { api, ApiError } from "@/lib/api";
+import { formatIstDate, formatIstTime12h, getTodayIstYmd } from "@/lib/date-utils";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function formatTime12h(timeStr: string | null | undefined): string {
-    if (!timeStr) return "";
-
-    if (timeStr.includes("T") || timeStr.includes("Z")) {
-        const d = new Date(timeStr);
-        if (!isNaN(d.getTime())) {
-            return d.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-                timeZone: "Asia/Kolkata",
-            });
-        }
-    }
-
-    if (timeStr.includes(" ") && timeStr.includes("-")) {
-        const timeOnly = timeStr.split(" ")[1];
-        if (timeOnly) {
-            timeStr = timeOnly;
-        }
-    }
-
-    const parts = timeStr.slice(0, 5).split(":");
-    if (parts.length !== 2) return timeStr;
-    const h = parseInt(parts[0], 10);
-    const m = parts[1];
-    if (isNaN(h)) return timeStr;
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h % 12 || 12;
-    return `${String(h12).padStart(2, "0")}:${m} ${ampm}`;
+    return formatIstTime12h(timeStr, "", true);
 }
 
-const MONTH_NAMES_SHORT = [
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
-];
-
 function formatDateDisplay(dateStr: string): string {
-    if (!dateStr) return "";
-    // Clean ISO date string: extract only the YYYY-MM-DD prefix if timestamp is present
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        const year = parts[0];
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parts[2].padStart(2, "0");
-        const monthName = MONTH_NAMES_SHORT[monthIndex] || parts[1];
-        return `${day}-${monthName}-${year}`;
-    }
-    return dateStr;
+    return formatIstDate(dateStr, "");
 }
 
 interface ClinicBreak {
@@ -130,11 +87,7 @@ export default function ClinicScheduleManagement() {
     // Modal state for adding exclusion
     const [showExclusionModal, setShowExclusionModal] = useState(false);
     const [targetDoctorId, setTargetDoctorId] = useState<number | "">("");
-    const [exclusionDate, setExclusionDate] = useState(() => {
-        const d = new Date();
-        d.setDate(d.getDate() + 1);
-        return d.toISOString().split("T")[0];
-    });
+    const [exclusionDate, setExclusionDate] = useState(() => getTodayIstYmd(1));
     const [isFullDay, setIsFullDay] = useState(true);
     const [startTime, setStartTime] = useState("09:00");
     const [endTime, setEndTime] = useState("13:00");
@@ -728,7 +681,7 @@ export default function ClinicScheduleManagement() {
                                 <input
                                     type="date"
                                     required
-                                    min={new Date().toISOString().split("T")[0]}
+                                    min={getTodayIstYmd()}
                                     value={exclusionDate}
                                     onChange={(e) => setExclusionDate(e.target.value)}
                                     className="w-full rounded-lg border border-black/15 bg-white dark:border-white/15 dark:bg-zinc-800 p-2 text-xs focus:border-purple-600 focus:outline-none"

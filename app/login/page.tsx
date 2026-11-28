@@ -64,11 +64,11 @@ export default function Login() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-transparent" />
 
                 <div className="relative z-10 text-white">
-                   
+
                     <h1 className="mt-4 text-4xl font-extrabold tracking-tight">Kumar Centre</h1>
                 </div>
 
-                
+
             </div>
 
             {/* Right Column: Interactive Login Area */}

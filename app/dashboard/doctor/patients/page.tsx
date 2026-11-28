@@ -22,57 +22,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { api, ApiError } from "@/lib/api";
 import { formatAgeGender } from "@/lib/patient-utils";
-
-const MONTH_NAMES_SHORT = [
-    "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
-];
+import { formatIstDate, formatIstTime12h } from "@/lib/date-utils";
 
 function formatDateTable(dateStr: string | null | undefined): string {
-    if (!dateStr) return "—";
-    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr.split(" ")[0];
-    const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-        const year = parts[0];
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const day = parts[2].padStart(2, "0");
-        const monthName = MONTH_NAMES_SHORT[monthIndex] || parts[1];
-        return `${day}-${monthName}-${year}`;
-    }
-    return dateStr;
+    return formatIstDate(dateStr, "—");
 }
 
 function formatTime12h(timeStr: string | null | undefined): string {
-    if (!timeStr) return "";
-
-    if (timeStr.includes("T") || timeStr.includes("Z")) {
-        const d = new Date(timeStr);
-        if (!isNaN(d.getTime())) {
-            return d.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-                timeZone: "Asia/Kolkata",
-            });
-        }
-    }
-
-    if (timeStr.includes(" ") && timeStr.includes("-")) {
-        const timeOnly = timeStr.split(" ")[1];
-        if (timeOnly) {
-            timeStr = timeOnly;
-        }
-    }
-
-    const clean = timeStr.includes("T") ? timeStr.split("T")[1] : timeStr;
-    const parts = clean.slice(0, 5).split(":");
-    if (parts.length !== 2) return timeStr;
-    const h = parseInt(parts[0], 10);
-    const m = parts[1];
-    if (isNaN(h)) return timeStr;
-    const period = h >= 12 ? "PM" : "AM";
-    const hour12 = h % 12 === 0 ? 12 : h % 12;
-    return `${hour12}:${m} ${period}`;
+    return formatIstTime12h(timeStr, "", false);
 }
 
 interface PatientListItem {

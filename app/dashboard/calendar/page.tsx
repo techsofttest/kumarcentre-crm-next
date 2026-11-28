@@ -17,6 +17,7 @@ import {
     RefreshCw
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
+import { getTodayIstYmd } from "@/lib/date-utils";
 import { normalizeRole } from "@/lib/roles";
 
 interface StaffLane {
@@ -68,7 +69,10 @@ export default function CalendarMatrix() {
     const router = useRouter();
 
     // Date navigation
-    const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    const [currentDate, setCurrentDate] = useState<Date>(() => {
+        const [y, m, d] = getTodayIstYmd().split("-").map(Number);
+        return new Date(y, m - 1, d);
+    });
     const formattedDate = useMemo(() => formatDateYMD(currentDate), [currentDate]);
 
     // Data from Backend

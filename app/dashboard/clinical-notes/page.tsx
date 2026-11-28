@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getTodayIstYmd } from "@/lib/date-utils";
 
 // Mock interface for the form state
 interface ClinicalNoteForm {
@@ -109,7 +110,7 @@ function ClinicalNotesContent() {
 
             const newNote = {
                 id: `NOTE-${Date.now()}`,
-                date: new Date().toISOString().split('T')[0],
+                date: getTodayIstYmd(),
                 author: "Dr. (Current User)",
                 service: patientContext.service,
                 content: parts || "(No content entered)",
