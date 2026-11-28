@@ -21,6 +21,7 @@ import {
     CalendarOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertifyToast } from "@/components/ui/alertify-toast";
 import { FlatpickrTime } from "@/components/ui/flatpickr-time";
 import { api, ApiError } from "@/lib/api";
 
@@ -186,7 +187,10 @@ export default function ClinicScheduleManagement() {
                         ...d,
                         is_working: newIsWorking,
                         sessions: newIsWorking && d.sessions.length === 0
-                            ? [{ start_time: "09:00:00", end_time: "17:00:00", breaks: [{ start_time: "13:00:00", end_time: "14:00:00" }] }]
+                            ? [
+                                { start_time: "09:00:00", end_time: "13:00:00", breaks: [] },
+                                { start_time: "14:00:00", end_time: "17:00:00", breaks: [] },
+                            ]
                             : d.sessions,
                     };
                 }
@@ -201,10 +205,14 @@ export default function ClinicScheduleManagement() {
             prev.map((d) => {
                 if (d.day_of_week === dayIndex) {
                     const updatedSessions = [...d.sessions];
-                    updatedSessions[sessionIdx] = {
+                    const nextSession = {
                         ...updatedSessions[sessionIdx],
                         [field]: value.length === 5 ? `${value}:00` : value,
                     };
+                    nextSession.breaks = (nextSession.breaks || []).filter(
+                        (b) => b.start_time >= nextSession.start_time && b.end_time <= nextSession.end_time
+                    );
+                    updatedSessions[sessionIdx] = nextSession;
                     return { ...d, sessions: updatedSessions };
                 }
                 return d;
@@ -221,7 +229,7 @@ export default function ClinicScheduleManagement() {
                         ...d,
                         sessions: [
                             ...d.sessions,
-                            { start_time: "18:00:00", end_time: "20:00:00", breaks: [] },
+                            { start_time: "14:00:00", end_time: "17:00:00", breaks: [] },
                         ],
                     };
                 }
@@ -251,12 +259,19 @@ export default function ClinicScheduleManagement() {
             prev.map((d) => {
                 if (d.day_of_week === dayIndex) {
                     const updatedSessions = [...d.sessions];
-                    const existingBreaks = updatedSessions[sessionIdx].breaks || [];
+                    const targetSession = updatedSessions[sessionIdx];
+                    const existingBreaks = targetSession.breaks || [];
+                    const defaultStart = "13:00:00" >= targetSession.start_time && "14:00:00" <= targetSession.end_time
+                        ? "13:00:00"
+                        : targetSession.start_time;
+                    const defaultEnd = "13:00:00" >= targetSession.start_time && "14:00:00" <= targetSession.end_time
+                        ? "14:00:00"
+                        : targetSession.end_time;
                     updatedSessions[sessionIdx] = {
-                        ...updatedSessions[sessionIdx],
+                        ...targetSession,
                         breaks: [
                             ...existingBreaks,
-                            { start_time: "13:00:00", end_time: "14:00:00" },
+                            { start_time: defaultStart, end_time: defaultEnd },
                         ],
                     };
                     return { ...d, sessions: updatedSessions };
@@ -308,11 +323,37 @@ export default function ClinicScheduleManagement() {
 
     // Save common weekly schedule
     const handleSaveSchedule = async () => {
-        setIsSavingSchedule(true);
         setErrorMessage(null);
+
+        for (const day of workingDays) {
+            if (!day.is_working) continue;
+            const dayLabel = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][day.day_of_week] || `Day ${day.day_of_week}`;
+            const sortedSessions = [...day.sessions].sort((a, b) => a.start_time.localeCompare(b.start_time));
+            for (let i = 0; i < sortedSessions.length; i++) {
+                const s = sortedSessions[i];
+                if (s.end_time <= s.start_time) {
+                    setErrorMessage(`${dayLabel}: Session end time (${s.end_time}) must be after start time (${s.start_time}).`);
+                    return;
+                }
+                if (i > 0 && s.start_time < sortedSessions[i - 1].end_time) {
+                    setErrorMessage(`${dayLabel}: Sessions (${sortedSessions[i - 1].start_time} - ${sortedSessions[i - 1].end_time}) and (${s.start_time} - ${s.end_time}) cannot overlap.`);
+                    return;
+                }
+            }
+        }
+
+        const sanitizedDays = workingDays.map((day) => ({
+            ...day,
+            sessions: day.sessions.map((s) => ({
+                ...s,
+                breaks: [],
+            })),
+        }));
+
+        setIsSavingSchedule(true);
         try {
-            await api.updateClinicSchedule(workingDays);
-            setAlertMessage("Clinic working hours and common breaks saved successfully!");
+            await api.updateClinicSchedule(sanitizedDays);
+            setAlertMessage("Clinic working hours saved successfully!");
             setTimeout(() => setAlertMessage(null), 4000);
             loadData();
         } catch (err: any) {
@@ -411,13 +452,8 @@ export default function ClinicScheduleManagement() {
                 </div>
             </div>
 
-            {/* Notifications */}
-            {alertMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="text-sm font-medium">{alertMessage}</span>
-                </div>
-            )}
+            <AlertifyToast type="success" message={alertMessage} onClose={() => setAlertMessage(null)} />
+            <AlertifyToast type="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
 
             {conflictWarning && (
                 <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
@@ -426,13 +462,6 @@ export default function ClinicScheduleManagement() {
                         <span className="font-bold">Booking Conflict Warning: </span>
                         <span>{conflictWarning}</span>
                     </div>
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-                    <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-                    <span>{errorMessage}</span>
                 </div>
             )}
 
@@ -559,13 +588,6 @@ export default function ClinicScheduleManagement() {
                                                         </div>
 
                                                         <div className="flex items-center gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleAddBreak(dayIndex, sIdx)}
-                                                                className="text-xs text-foreground/70 hover:text-purple-600 flex items-center gap-1"
-                                                            >
-                                                                <Coffee className="h-3 w-3" /> Add Break
-                                                            </button>
                                                             {dayConfig.sessions.length > 1 && (
                                                                 <button
                                                                     type="button"
@@ -577,46 +599,6 @@ export default function ClinicScheduleManagement() {
                                                             )}
                                                         </div>
                                                     </div>
-
-                                                    {/* Session Breaks */}
-                                                    {session.breaks && session.breaks.length > 0 && (
-                                                        <div className="border-t border-black/5 dark:border-white/5 pt-2.5 space-y-2">
-                                                            {session.breaks.map((b, bIdx) => (
-                                                                <div
-                                                                    key={bIdx}
-                                                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50/60 dark:bg-zinc-900/40 rounded-md p-2"
-                                                                >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-                                                                            Break {session.breaks && session.breaks.length > 1 ? bIdx + 1 : ""}
-                                                                        </span>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <FlatpickrTime
-                                                                                value={b.start_time}
-                                                                                onChange={(val) => handleUpdateBreak(dayIndex, sIdx, bIdx, "start_time", val)}
-                                                                            />
-                                                                            <span className="text-xs text-foreground/50">to</span>
-                                                                            <FlatpickrTime
-                                                                                value={b.end_time}
-                                                                                onChange={(val) => handleUpdateBreak(dayIndex, sIdx, bIdx, "end_time", val)}
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => handleRemoveBreak(dayIndex, sIdx, bIdx)}
-                                                                            className="text-xs text-red-600 hover:text-red-700 p-1 flex items-center gap-1"
-                                                                            title="Remove Break"
-                                                                        >
-                                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             ))}
                                         </div>

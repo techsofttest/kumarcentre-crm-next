@@ -34,7 +34,6 @@ export function FlatpickrTime({
             noCalendar: true,
             dateFormat: "h:i K", // Displays e.g. "09:00 AM", "02:30 PM"
             time_24hr: false,   // 12-hour AM/PM picker
-            defaultDate: initialVal || undefined,
             disableMobile: true,
             onChange: (selectedDates) => {
                 if (selectedDates && selectedDates.length > 0) {
@@ -45,6 +44,10 @@ export function FlatpickrTime({
                 }
             },
         });
+
+        if (initialVal) {
+            fpRef.current.setDate(initialVal, false, "H:i");
+        }
 
         return () => {
             if (fpRef.current) {

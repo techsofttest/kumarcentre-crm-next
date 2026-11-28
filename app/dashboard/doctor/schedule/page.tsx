@@ -5,7 +5,6 @@ import {
     Clock,
     Calendar as CalendarIcon,
     AlertCircle,
-    Coffee,
     CalendarOff,
     Loader2,
     RefreshCw,
@@ -140,7 +139,7 @@ export default function DoctorSchedulePage() {
                             Clinic Operating Schedule
                         </h1>
                         <p className="text-xs text-foreground/60 mt-1">
-                            Common clinic working hours, consultation sessions, breaks, and holiday calendar
+                            Common clinic working hours, consultation sessions, and holiday calendar
                         </p>
                     </div>
 
@@ -197,7 +196,6 @@ export default function DoctorSchedulePage() {
                                             <th className="py-3 px-4">Operating Status</th>
                                             <th className="py-3 px-4">Morning Session</th>
                                             <th className="py-3 px-4">Evening Session</th>
-                                            <th className="py-3 px-4">Scheduled Breaks</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-black/5 dark:divide-white/5">
@@ -205,9 +203,6 @@ export default function DoctorSchedulePage() {
                                             const dayName = DAYS_OF_WEEK[day.day_of_week];
                                             const session1 = day.sessions && day.sessions[0];
                                             const session2 = day.sessions && day.sessions[1];
-
-                                            // All breaks in this day
-                                            const allBreaks = (day.sessions || []).flatMap((s) => s.breaks || []);
 
                                             return (
                                                 <tr key={day.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02]">
@@ -239,23 +234,6 @@ export default function DoctorSchedulePage() {
                                                             <span>
                                                                 {formatTime12h(session2.start_time)} – {formatTime12h(session2.end_time)}
                                                             </span>
-                                                        ) : (
-                                                            <span className="text-foreground/40">—</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        {allBreaks.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-1.5">
-                                                                {allBreaks.map((b) => (
-                                                                    <span
-                                                                        key={b.id}
-                                                                        className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 px-2 py-0.5 font-mono text-[10px] border border-amber-200 dark:border-amber-900/40"
-                                                                    >
-                                                                        <Coffee className="h-2.5 w-2.5" />
-                                                                        {formatTime12h(b.start_time)} – {formatTime12h(b.end_time)}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
                                                         ) : (
                                                             <span className="text-foreground/40">—</span>
                                                         )}
