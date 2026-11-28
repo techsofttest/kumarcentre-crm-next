@@ -307,11 +307,6 @@ export default function OverviewDashboard() {
                             New Appointment
                         </Button>
                     </Link>
-                    <Link href="/dashboard/reports">
-                        <Button variant="outline" icon={Calendar}>
-                            Daily Reports
-                        </Button>
-                    </Link>
                 </div>
             </div>
 
