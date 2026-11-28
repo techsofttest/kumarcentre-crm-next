@@ -46,7 +46,7 @@ export default function PhysioReferralDetailPage() {
     const params = useParams();
     const referralId = parseInt(params.id as string, 10);
 
-    const [activeTab, setActiveTab] = useState<"overview" | "sessions" | "ledger" | "plan">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "sessions" | "ledger">("overview");
 
     const [data, setData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -240,7 +240,7 @@ export default function PhysioReferralDetailPage() {
         );
     }
 
-    const { referral, patient, billing_plan, financial_summary, treatment_plan, active_session, sessions, ledger } = data;
+    const { referral, patient, financial_summary, treatment_plan, active_session, sessions, ledger } = data;
     const isClosed = referral.status === "closed" || referral.status === "cancelled";
     const isCompleted = referral.status === "treatment_completed";
 
@@ -722,57 +722,6 @@ export default function PhysioReferralDetailPage() {
                     </div>
                 )}
 
-                {/* TAB 4: TREATMENT PLAN */}
-                {activeTab === "plan" && (
-                    <div className="space-y-6 animate-in fade-in">
-                        <div className="rounded-xl border border-black/10 dark:border-white/10 p-6 space-y-4 bg-white dark:bg-zinc-900">
-                            <h3 className="text-base font-bold text-foreground">Treatment Plan Arrangement</h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                                <div className="space-y-1">
-                                    <span className="text-foreground/50 block font-bold">Billing Model</span>
-                                    <span className="text-sm font-bold text-foreground">{billing_plan.billing_type_label}</span>
-                                </div>
-
-                                {billing_plan.billing_type === "package" ? (
-                                    <>
-                                        <div className="space-y-1">
-                                            <span className="text-foreground/50 block font-bold">Package Name</span>
-                                            <span className="text-sm font-bold text-foreground">{billing_plan.package_name || "Physio Package"}</span>
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <span className="text-foreground/50 block font-bold">Package Total Price</span>
-                                            <span className="text-sm font-bold font-mono text-purple-600">₹{billing_plan.package_price?.toLocaleString()}</span>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="space-y-1">
-                                        <span className="text-foreground/50 block font-bold">Agreed Per-Session Rate</span>
-                                        <span className="text-sm font-bold font-mono text-purple-600">₹{billing_plan.session_charge?.toLocaleString()}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {billing_plan.billing_type === "package" && (
-                                <div className="space-y-2 pt-4 border-t border-black/5 dark:border-white/5">
-                                    <div className="flex justify-between items-center text-xs font-bold">
-                                        <span>Package Session Consumption</span>
-                                        <span>{treatment_plan.sessions_completed} / {billing_plan.included_sessions} Sessions Completed</span>
-                                    </div>
-                                    <div className="h-3 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                        <div
-                                            className="h-full bg-purple-600 transition-all rounded-full"
-                                            style={{
-                                                width: `${Math.min(100, Math.round((treatment_plan.sessions_completed / (billing_plan.included_sessions || 1)) * 100))}%`,
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* MODAL: RECORD PAYMENT */}
